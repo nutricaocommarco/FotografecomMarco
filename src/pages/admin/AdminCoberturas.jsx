@@ -20,6 +20,36 @@ export default function AdminCoberturas() {
   const [editandoId, setEditandoId] = useState(null);
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
+
+  function fileParaBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFotoSelecionada(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setErro('Foto muito grande (máximo 5MB).');
+      return;
+    }
+    setEnviandoFoto(true);
+    setErro('');
+    try {
+      const fileBase64 = await fileParaBase64(file);
+      const { url } = await adminApi.uploadFoto(fileBase64, file.name, file.type);
+      setForm((f) => ({ ...f, foto_capa: url }));
+    } catch (err) {
+      setErro('Falha ao enviar foto: ' + err.message);
+    } finally {
+      setEnviandoFoto(false);
+    }
+  }
 
   function carregar() {
     adminApi.listCoberturas().then(setCoberturas).catch((e) => setErro(e.message));
@@ -132,12 +162,14 @@ export default function AdminCoberturas() {
           </div>
         </div>
 
-        <input
-          placeholder="URL da foto de capa"
-          value={form.foto_capa}
-          onChange={(e) => setForm({ ...form, foto_capa: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
-        />
+        <div>
+          <label className="text-xs font-bold uppercase text-slate-500">Foto de capa</label>
+          <input type="file" accept="image/*" onChange={handleFotoSelecionada} className="block w-full text-sm mt-1" />
+          {enviandoFoto && <p className="text-xs text-slate-400 mt-1">Enviando foto...</p>}
+          {form.foto_capa && !enviandoFoto && (
+            <img src={form.foto_capa} alt="Prévia" className="mt-2 h-24 rounded-lg object-cover" />
+          )}
+        </div>
 
         <textarea
           placeholder="OBS (opcional) — ex: fotos de chuva, sessão parcial..."
@@ -184,7 +216,7 @@ export default function AdminCoberturas() {
 
         <button
           type="submit"
-          disabled={salvando}
+          disabled={salvando || enviandoFoto}
           className="bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60"
         >
           {salvando ? 'Salvando...' : editandoId ? 'Salvar alterações' : 'Criar cobertura'}

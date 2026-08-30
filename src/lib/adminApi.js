@@ -22,6 +22,9 @@ export const adminApi = {
   logout: () => request('admin-logout', { method: 'POST' }),
   session: () => request('admin-session'),
 
+  uploadFoto: (fileBase64, fileName, contentType) =>
+    request('admin-upload-foto', { method: 'POST', body: JSON.stringify({ fileBase64, fileName, contentType }) }),
+
   listCoberturas: () => request('admin-coberturas'),
   createCobertura: (data) => request('admin-coberturas', { method: 'POST', body: JSON.stringify(data) }),
   updateCobertura: (id, data) => request('admin-coberturas', { method: 'PUT', body: JSON.stringify({ id, ...data }) }),
