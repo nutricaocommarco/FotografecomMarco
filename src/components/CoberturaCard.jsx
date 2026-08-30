@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, X } from 'lucide-react';
 
 const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
@@ -90,36 +91,38 @@ export default function CoberturaCard({ cobertura }) {
               <ChevronDown size={14} />
             </button>
 
-            {bikesAbertas && (
-              <div
-                className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-                onClick={() => setBikesAbertas(false)}
-              >
+            {bikesAbertas &&
+              createPortal(
                 <div
-                  className="bg-white rounded-[2rem] p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
-                  onClick={(e) => e.stopPropagation()}
+                  className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                  onClick={() => setBikesAbertas(false)}
                 >
-                  <div className="flex items-center justify-between mb-5">
-                    <h4 className="font-black uppercase italic text-slate-900 text-lg">Bikes</h4>
-                    <button
-                      type="button"
-                      onClick={() => setBikesAbertas(false)}
-                      aria-label="Fechar"
-                      className="text-slate-400 hover:text-slate-700"
-                    >
-                      <X size={22} />
-                    </button>
+                  <div
+                    className="bg-white rounded-[2rem] p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between mb-5">
+                      <h4 className="font-black uppercase italic text-slate-900 text-lg">Bikes</h4>
+                      <button
+                        type="button"
+                        onClick={() => setBikesAbertas(false)}
+                        aria-label="Fechar"
+                        className="text-slate-400 hover:text-slate-700"
+                      >
+                        <X size={22} />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {bikes.map((g) => (
+                        <PillLink key={g.codigo} href={g.link}>
+                          {g.nome}
+                        </PillLink>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {bikes.map((g) => (
-                      <PillLink key={g.codigo} href={g.link}>
-                        {g.nome}
-                      </PillLink>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+                </div>,
+                document.body,
+              )}
           </>
         )}
       </div>
