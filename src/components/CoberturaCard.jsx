@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 
 const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
@@ -80,26 +80,47 @@ export default function CoberturaCard({ cobertura }) {
         )}
 
         {bikes.length > 0 && (
-          <div className="relative inline-block mt-2">
+          <>
             <button
               type="button"
-              onClick={() => setBikesAbertas((v) => !v)}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-red-700 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-all"
+              onClick={() => setBikesAbertas(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-red-700 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-all mt-2"
             >
               Bikes
-              <ChevronDown size={14} className={`transition-transform ${bikesAbertas ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} />
             </button>
 
             {bikesAbertas && (
-              <div className="absolute z-10 top-full mt-2 left-1/2 -translate-x-1/2 bg-white border border-slate-100 shadow-xl rounded-2xl p-3 w-64 max-h-56 overflow-y-auto flex flex-wrap gap-2 justify-center">
-                {bikes.map((g) => (
-                  <PillLink key={g.codigo} href={g.link}>
-                    {g.nome}
-                  </PillLink>
-                ))}
+              <div
+                className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                onClick={() => setBikesAbertas(false)}
+              >
+                <div
+                  className="bg-white rounded-[2rem] p-6 w-full max-w-md max-h-[85vh] overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <h4 className="font-black uppercase italic text-slate-900 text-lg">Bikes</h4>
+                    <button
+                      type="button"
+                      onClick={() => setBikesAbertas(false)}
+                      aria-label="Fechar"
+                      className="text-slate-400 hover:text-slate-700"
+                    >
+                      <X size={22} />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {bikes.map((g) => (
+                      <PillLink key={g.codigo} href={g.link}>
+                        {g.nome}
+                      </PillLink>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
