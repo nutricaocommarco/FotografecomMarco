@@ -32,7 +32,8 @@ export default function EmBreveBox({ aviso }) {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto my-10 p-6 md:p-8 bg-red-50 border border-red-200 rounded-[2rem] text-left">
+    <div className="w-full max-w-3xl mx-auto my-10 p-6 md:p-8 bg-red-50 border border-red-200 rounded-[2rem] text-center">
+      <img src="/logo.svg" alt="Fotografe com Marco" className="w-16 h-16 mx-auto mb-3 object-contain" />
       <p className="font-black text-red-800 uppercase text-sm tracking-wide mb-2">Em breve fotos no ar!</p>
       <p className="text-slate-800 font-bold mb-1">
         {aviso.evento} — previsão {aviso.previsao_horario}
