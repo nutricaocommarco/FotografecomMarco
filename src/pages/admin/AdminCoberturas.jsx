@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/adminApi';
-import { buildLinkPrincipal, parseGaleriasColadas, gerarLinksGalerias } from '../../lib/focoRadicalLinks';
+import { buildLinkPrincipal, parseGaleriasColadas, gerarLinksGalerias, calcularDataSaidaDoAr } from '../../lib/focoRadicalLinks';
 
 const FORM_VAZIO = {
   nome: 'Treino Prainha',
@@ -21,6 +21,15 @@ export default function AdminCoberturas() {
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [saidaEditadaManualmente, setSaidaEditadaManualmente] = useState(false);
+
+  function handleDataEventoChange(novaData) {
+    setForm((f) => ({
+      ...f,
+      data_evento: novaData,
+      data_saida_do_ar: saidaEditadaManualmente ? f.data_saida_do_ar : calcularDataSaidaDoAr(novaData),
+    }));
+  }
 
   function fileParaBase64(file) {
     return new Promise((resolve, reject) => {
@@ -96,6 +105,7 @@ export default function AdminCoberturas() {
       setTextoGalerias('');
       setGaleriasParseadas([]);
       setEditandoId(null);
+      setSaidaEditadaManualmente(false);
       carregar();
     } catch (err) {
       setErro(err.message);
@@ -106,6 +116,7 @@ export default function AdminCoberturas() {
 
   function handleEditar(c) {
     setEditandoId(c.id);
+    setSaidaEditadaManualmente(true); // respeita o valor já salvo, não recalcula por cima
     setForm({
       nome: c.nome,
       local: c.local || 'treino-prainha',
@@ -147,16 +158,19 @@ export default function AdminCoberturas() {
             <input
               type="date"
               value={form.data_evento}
-              onChange={(e) => setForm({ ...form, data_evento: e.target.value })}
+              onChange={(e) => handleDataEventoChange(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
             />
           </div>
           <div>
-            <label className="text-xs font-bold uppercase text-slate-500">Sai do ar em (opcional)</label>
+            <label className="text-xs font-bold uppercase text-slate-500">Sai do ar em (automático: evento + 6 meses)</label>
             <input
               type="date"
               value={form.data_saida_do_ar}
-              onChange={(e) => setForm({ ...form, data_saida_do_ar: e.target.value })}
+              onChange={(e) => {
+                setSaidaEditadaManualmente(true);
+                setForm({ ...form, data_saida_do_ar: e.target.value });
+              }}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
             />
           </div>

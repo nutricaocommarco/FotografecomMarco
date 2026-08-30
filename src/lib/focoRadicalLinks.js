@@ -32,6 +32,19 @@ export function buildLinkGaleria(dataEvento, local = 'treino-prainha', codigoGal
   return `https://maj.focoradical.com.br/evento/${slug}/resultado-de-busca?pesquisa_por=galeria&galeria=${codigoGaleria}`;
 }
 
+// A Foco Radical mantém as fotos no ar por 6 meses a partir do evento.
+// new Date() já lida sozinho com a virada de mês (ex: 29-ago + 6 meses = 29-fev,
+// que não existe em ano não bissexto, e vira automaticamente 01-mar).
+export function calcularDataSaidaDoAr(dataEvento) {
+  if (!dataEvento) return '';
+  const [ano, mes, dia] = dataEvento.split('-').map(Number);
+  const d = new Date(ano, mes - 1 + 6, dia);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
 // Faz o parsing do bloco colado do Excel, no formato:
 // Nome: Rockrider
 // Código: rockrider
