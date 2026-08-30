@@ -73,7 +73,7 @@ export default function Coberturas() {
         </p>
 
         {meta && (
-          <ProgressBar titulo={meta.titulo} percentual={meta.percentual} prazo={meta.prazo} link={meta.link} linkLabel={meta.link_label} />
+          <ProgressBar titulo={meta.titulo} descricao={meta.descricao} percentual={meta.percentual} prazo={meta.prazo} link={meta.link} linkLabel={meta.link_label} />
         )}
 
         {aviso && <EmBreveBox aviso={aviso} />}

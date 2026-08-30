@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ProgressBar({ titulo, percentual, prazo, link, linkLabel }) {
+export default function ProgressBar({ titulo, descricao, percentual, prazo, link, linkLabel }) {
   if (percentual == null) return null;
   const pct = Math.max(0, Math.min(100, percentual));
 
@@ -11,7 +11,8 @@ export default function ProgressBar({ titulo, percentual, prazo, link, linkLabel
           Prazo: {prazo}
         </span>
       )}
-      <p className="font-black text-slate-800 text-lg leading-snug mb-6 max-w-xl mx-auto">{titulo}</p>
+      <p className="font-black text-slate-900 text-xl leading-snug mb-2 max-w-xl mx-auto">{titulo}</p>
+      {descricao && <p className="text-slate-600 font-medium leading-relaxed mb-6 max-w-xl mx-auto">{descricao}</p>}
 
       <div className="text-5xl font-black text-red-700 mb-4">{pct}%</div>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/adminApi';
 
-const FORM_VAZIO = { titulo: '', percentual: 0, prazo: '', link: '', link_label: '', ativo: true };
+const FORM_VAZIO = { titulo: '', descricao: '', percentual: 0, prazo: '', link: '', link_label: '', ativo: true };
 
 export default function AdminProgresso() {
   const [metas, setMetas] = useState([]);
@@ -38,7 +38,15 @@ export default function AdminProgresso() {
 
   function handleEditar(m) {
     setEditandoId(m.id);
-    setForm({ titulo: m.titulo, percentual: m.percentual, prazo: m.prazo || '', link: m.link || '', link_label: m.link_label || '', ativo: m.ativo });
+    setForm({
+      titulo: m.titulo,
+      descricao: m.descricao || '',
+      percentual: m.percentual,
+      prazo: m.prazo || '',
+      link: m.link || '',
+      link_label: m.link_label || '',
+      ativo: m.ativo,
+    });
   }
 
   async function handleExcluir(id) {
@@ -52,12 +60,18 @@ export default function AdminProgresso() {
       <h1 className="text-2xl font-black uppercase italic mb-8">Barra de Progresso</h1>
 
       <form onSubmit={handleSalvar} className="bg-white p-6 rounded-2xl border border-slate-200 mb-10 space-y-4">
-        <textarea
-          placeholder="Título (ex: Conquistei um sonho: a casa própria!)"
+        <input
+          placeholder="Título (ex: Conquistei um sonho: a casa própria! 🏠)"
           required
           value={form.titulo}
           onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-          rows={2}
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+        />
+        <textarea
+          placeholder="Descrição (ex: Consegui o financiamento e agora começa a batalha para pagar...)"
+          value={form.descricao}
+          onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+          rows={3}
           className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
         />
         <div>

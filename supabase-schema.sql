@@ -34,6 +34,7 @@ create table inscricoes_em_breve (
 create table metas_progresso (
   id uuid primary key default gen_random_uuid(),
   titulo text not null,
+  descricao text,
   percentual int not null default 0,
   prazo text,
   link text,
