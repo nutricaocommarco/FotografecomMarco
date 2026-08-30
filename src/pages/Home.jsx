@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { ChevronRight, Camera, Image } from 'lucide-react';
+import YouTubeLazy from '../components/YouTubeLazy';
 
 export default function Home() {
   return (
@@ -88,7 +89,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-slate-50 text-center">
+      <section className="py-24 bg-slate-50">
+        <div className="container mx-auto px-6 max-w-3xl text-center">
+          <h2 className="text-3xl font-black text-slate-900 uppercase italic mb-3">Conheça o Local</h2>
+          <div className="w-16 h-1.5 bg-red-700 rounded-full mx-auto mb-8"></div>
+          <div className="aspect-video rounded-[2rem] overflow-hidden shadow-xl">
+            <YouTubeLazy videoId="sqgrJxPEqxw" title="Conheça o local das coberturas — Fotografe com Marco" />
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-white text-center">
         <div className="container mx-auto px-6">
           <p className="text-slate-500 font-bold uppercase text-sm tracking-widest">
             Também sou estudante de Nutrição — conheça o{' '}
