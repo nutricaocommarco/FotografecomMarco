@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --emptyOutDir",
-    "postbuild": "node prerender.mjs && node gerar-sitemap.mjs",
+    "postbuild": "node gerar-sitemap.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
