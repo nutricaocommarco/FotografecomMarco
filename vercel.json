@@ -35,6 +35,6 @@
     { "source": "/2021/10/06/o-que-fazer-em-miguel-pereira-de-bike", "destination": "/o-que-fazer-em-miguel-pereira-de-bike", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
