@@ -1,6 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+
+// Categorias conhecidas que ficam soltas; qualquer outro código é tratado como marca de bike
+// e agrupado no menu "Bikes".
+const CODIGOS_CATEGORIA = ['ni', 'nao-identificados', 'corrida', 'caminhada', 'corrida-caminhada', 'motos', 'carros', 'carro', 'pet', 'surf', 'todas'];
 
 function formatarDataBadge(dataEvento) {
   if (!dataEvento) return null;
@@ -14,9 +19,26 @@ function formatarDataExtenso(dataEvento) {
   return `${dia} de ${MESES_ABREV[mes - 1]} de ${ano}`;
 }
 
+function PillLink({ href, children }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="text-xs font-bold uppercase tracking-wide text-red-700 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-all"
+    >
+      {children}
+    </a>
+  );
+}
+
 export default function CoberturaCard({ cobertura }) {
   const { nome, data_evento, foto_capa, link_principal, galerias, obs } = cobertura;
   const badge = formatarDataBadge(data_evento);
+  const [bikesAbertas, setBikesAbertas] = useState(false);
+
+  const categorias = (galerias || []).filter((g) => CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()));
+  const bikes = (galerias || []).filter((g) => !CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()));
 
   return (
     <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
@@ -45,19 +67,36 @@ export default function CoberturaCard({ cobertura }) {
           Reconhecimento Facial
         </a>
 
-        {galerias?.length > 0 && (
+        {categorias.length > 0 && (
           <div className="flex flex-wrap justify-center gap-2 mt-2">
-            {galerias.map((g) => (
-              <a
-                key={g.codigo}
-                href={g.link}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-bold uppercase tracking-wide text-red-700 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-all"
-              >
+            {categorias.map((g) => (
+              <PillLink key={g.codigo} href={g.link}>
                 {g.nome}
-              </a>
+              </PillLink>
             ))}
+          </div>
+        )}
+
+        {bikes.length > 0 && (
+          <div className="relative inline-block mt-2">
+            <button
+              type="button"
+              onClick={() => setBikesAbertas((v) => !v)}
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-red-700 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-all"
+            >
+              Bikes
+              <ChevronDown size={14} className={`transition-transform ${bikesAbertas ? 'rotate-180' : ''}`} />
+            </button>
+
+            {bikesAbertas && (
+              <div className="absolute z-10 top-full mt-2 left-1/2 -translate-x-1/2 bg-white border border-slate-100 shadow-xl rounded-2xl p-3 w-64 max-h-56 overflow-y-auto flex flex-wrap gap-2 justify-center">
+                {bikes.map((g) => (
+                  <PillLink key={g.codigo} href={g.link}>
+                    {g.nome}
+                  </PillLink>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
