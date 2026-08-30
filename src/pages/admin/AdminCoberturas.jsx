@@ -71,6 +71,13 @@ export default function AdminCoberturas() {
     setGaleriasParseadas(galerias);
   }
 
+  function handleAdicionarTodasAsFotos() {
+    setGaleriasParseadas((atual) => {
+      if (atual.some((g) => g.codigo === 'todas')) return atual;
+      return [...atual, { nome: 'Todas as Fotos', codigo: 'todas' }];
+    });
+  }
+
   const galeriasVisiveis = esconderZero ? galeriasParseadas.filter((g) => (g.numFotos ?? 1) > 0) : galeriasParseadas;
 
   async function handleSalvar(e) {
@@ -205,6 +212,13 @@ export default function AdminCoberturas() {
           <div className="flex items-center gap-3 mt-2">
             <button type="button" onClick={handleParsear} className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold">
               Gerar links
+            </button>
+            <button
+              type="button"
+              onClick={handleAdicionarTodasAsFotos}
+              className="bg-white text-red-700 border border-red-200 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-50"
+            >
+              + Todas as Fotos
             </button>
             <label className="flex items-center gap-2 text-sm text-slate-600">
               <input type="checkbox" checked={esconderZero} onChange={(e) => setEsconderZero(e.target.checked)} />
