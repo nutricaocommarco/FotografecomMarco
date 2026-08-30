@@ -41,8 +41,8 @@ export default function CoberturaCard({ cobertura }) {
   const bikes = (galerias || []).filter((g) => !CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()));
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
-      <a href={link_principal} target="_blank" rel="noreferrer" className="relative block aspect-[4/3] overflow-hidden bg-slate-100">
+    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all">
+      <a href={link_principal} target="_blank" rel="noreferrer" className="relative block aspect-[4/3] overflow-hidden rounded-t-[2rem] bg-slate-100">
         {foto_capa && (
           <img src={foto_capa} alt={nome} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
         )}
