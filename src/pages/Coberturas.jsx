@@ -1,7 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase, supabaseConfigured } from '../lib/supabaseClient';
+import { Archive } from 'lucide-react';
 import CoberturaCard from '../components/CoberturaCard';
+
+const VALIDADE_CARD_FOTOS_ANTIGAS = '2026-12-30';
+
+function CardFotosAntigas() {
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (hoje > VALIDADE_CARD_FOTOS_ANTIGAS) return null;
+
+  return (
+    <a
+      href="https://fotografecommarco.wordpress.com/coberturas/"
+      target="_blank"
+      rel="noreferrer"
+      className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center justify-center text-center p-8 aspect-[4/3] sm:aspect-auto"
+    >
+      <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+        <Archive className="text-red-700" size={28} />
+      </div>
+      <h3 className="text-lg font-black text-slate-900 uppercase italic mb-2">Fotos mais antigas</h3>
+      <p className="text-sm text-slate-600">Procure suas fotos de coberturas anteriores no nosso site antigo.</p>
+    </a>
+  );
+}
 import EmBreveBox from '../components/EmBreveBox';
 import ProgressBar from '../components/ProgressBar';
 
@@ -87,12 +110,15 @@ export default function Coberturas() {
         {loading ? (
           <p className="text-slate-400">Carregando coberturas...</p>
         ) : coberturas.length === 0 ? (
-          <p className="text-slate-400">Nenhuma cobertura ativa no momento. Volte em breve!</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <CardFotosAntigas />
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {coberturas.map((c) => (
               <CoberturaCard key={c.id} cobertura={c} />
             ))}
+            <CardFotosAntigas />
           </div>
         )}
       </section>
