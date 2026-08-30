@@ -38,7 +38,9 @@ export default function CoberturaCard({ cobertura }) {
   const [bikesAbertas, setBikesAbertas] = useState(false);
 
   const categorias = (galerias || []).filter((g) => CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()));
-  const bikes = (galerias || []).filter((g) => !CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()));
+  const bikes = (galerias || [])
+    .filter((g) => !CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()))
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   return (
     <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all">
