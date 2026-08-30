@@ -52,15 +52,12 @@ export function calcularDataSaidaDoAr(dataEvento) {
   return `${y}-${m}-${dd}`;
 }
 
-// Faz o parsing do bloco colado do Excel, no formato:
+// Formato do PC:
 // Nome: Rockrider
 // Código: rockrider
 // Nº de fotos: 0
 // (repetido várias vezes)
-export function parseGaleriasColadas(texto) {
-  if (!texto?.trim()) return [];
-
-  const linhas = texto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+function parseFormatoRotulado(linhas) {
   const galerias = [];
   let atual = {};
 
@@ -87,6 +84,36 @@ export function parseGaleriasColadas(texto) {
   }
 
   return galerias;
+}
+
+// Formato do celular: trincas de linhas soltas, sem rótulo:
+// Corrida
+// corrida
+// 0
+// (repetido várias vezes)
+function parseFormatoTrincas(linhas) {
+  if (linhas.length === 0 || linhas.length % 3 !== 0) return [];
+
+  const galerias = [];
+  for (let i = 0; i < linhas.length; i += 3) {
+    const [nome, codigo, numFotosStr] = [linhas[i], linhas[i + 1], linhas[i + 2]];
+    if (!/^\d+$/.test(numFotosStr)) return []; // não bate o padrão esperado, desiste desse formato
+    galerias.push({ nome, codigo, numFotos: parseInt(numFotosStr, 10) });
+  }
+  return galerias;
+}
+
+// Faz o parsing do bloco colado do Excel/app, tentando os dois formatos conhecidos
+// (o do PC, com rótulos "Nome:"/"Código:", e o do celular, em trincas de linhas soltas).
+export function parseGaleriasColadas(texto) {
+  if (!texto?.trim()) return [];
+
+  const linhas = texto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+  const rotulado = parseFormatoRotulado(linhas);
+  if (rotulado.length > 0) return rotulado;
+
+  return parseFormatoTrincas(linhas);
 }
 
 // Gera os links prontos a partir das galerias já parseadas + dados do evento.
