@@ -29,7 +29,14 @@ export function buildLinkPrincipal(dataEvento, local = 'treino-prainha') {
 
 export function buildLinkGaleria(dataEvento, local = 'treino-prainha', codigoGaleria) {
   const slug = buildEventSlug(dataEvento, local);
-  return `https://maj.focoradical.com.br/evento/${slug}/resultado-de-busca?pesquisa_por=galeria&galeria=${codigoGaleria}`;
+  const base = `https://maj.focoradical.com.br/evento/${slug}/resultado-de-busca`;
+
+  // "Todas as Fotos" não é uma galeria como as outras: não usa o parâmetro &galeria=.
+  if (codigoGaleria?.toLowerCase() === 'todas') {
+    return `${base}?pesquisa_por=todas`;
+  }
+
+  return `${base}?pesquisa_por=galeria&galeria=${codigoGaleria}`;
 }
 
 // A Foco Radical mantém as fotos no ar por 6 meses a partir do evento.
