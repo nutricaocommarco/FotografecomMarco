@@ -31,27 +31,49 @@ export default function AdminCoberturas() {
     }));
   }
 
-  function fileParaBase64(file) {
+  function arquivoParaBase64(blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result.split(',')[1]);
       reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // Redimensiona pra no máximo 1600px de largura e recomprime em JPEG — o site
+  // fica bem mais rápido pra carregar sem perda visível de qualidade na capa.
+  function comprimirImagem(file, larguraMaxima = 1600, qualidade = 0.82) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const urlTemp = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(urlTemp);
+        const escala = Math.min(1, larguraMaxima / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * escala);
+        canvas.height = Math.round(img.height * escala);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Falha ao comprimir imagem'))), 'image/jpeg', qualidade);
+      };
+      img.onerror = reject;
+      img.src = urlTemp;
     });
   }
 
   async function handleFotoSelecionada(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setErro('Foto muito grande (máximo 5MB).');
+    if (file.size > 15 * 1024 * 1024) {
+      setErro('Foto muito grande (máximo 15MB antes de comprimir).');
       return;
     }
     setEnviandoFoto(true);
     setErro('');
     try {
-      const fileBase64 = await fileParaBase64(file);
-      const { url } = await adminApi.uploadFoto(fileBase64, file.name, file.type);
+      const comprimida = await comprimirImagem(file);
+      const fileBase64 = await arquivoParaBase64(comprimida);
+      const { url } = await adminApi.uploadFoto(fileBase64, 'capa.jpg', 'image/jpeg');
       setForm((f) => ({ ...f, foto_capa: url }));
     } catch (err) {
       setErro('Falha ao enviar foto: ' + err.message);
