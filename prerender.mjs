@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
 const { posts } = await import('./src/data/posts.js');
 const { postsContent } = await import('./src/data/postsContent.js');
@@ -14,10 +15,38 @@ function ogImageFrom(url) {
   return `https://i0.wp.com/${clean}?w=1200&strip=all&quality=85`;
 }
 
+// Busca a foto da cobertura ativa mais recente pra usar como prévia da página
+// de Coberturas quando o link for compartilhado (WhatsApp, etc).
+async function buscarFotoCoberturaRecente() {
+  const url = process.env.VITE_SUPABASE_URL;
+  const key = process.env.VITE_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+
+  try {
+    const supabase = createClient(url, key);
+    const hoje = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from('coberturas')
+      .select('foto_capa')
+      .not('foto_capa', 'is', null)
+      .lte('data_evento', hoje)
+      .or(`data_saida_do_ar.is.null,data_saida_do_ar.gte.${hoje}`)
+      .order('data_evento', { ascending: false })
+      .limit(1);
+    return data?.[0]?.foto_capa || null;
+  } catch {
+    return null;
+  }
+}
+
+const fotoCoberturaRecente = await buscarFotoCoberturaRecente();
+const imagemCoberturas = fotoCoberturaRecente || FALLBACK_IMAGE;
+console.log('Imagem de prévia das Coberturas:', imagemCoberturas);
+
 const rotasEstaticas = [
-  { path: '', title: 'Fotografe com Marco | Fotografia Esportiva no Rio de Janeiro', desc: 'Cobertura fotográfica de treinos e eventos esportivos no Rio de Janeiro. Encontre e compre suas fotos de bike, corrida e muito mais.', image: FALLBACK_IMAGE },
+  { path: '', title: 'Fotografe com Marco | Fotografia Esportiva no Rio de Janeiro', desc: 'Cobertura fotográfica de treinos e eventos esportivos no Rio de Janeiro. Encontre e compre suas fotos de bike, corrida e muito mais.', image: imagemCoberturas },
   { path: 'sobre', title: 'Sobre | Fotografe com Marco', desc: 'Conheça a história de Marco Aurélio, fotógrafo esportivo no Rio de Janeiro.', image: FALLBACK_IMAGE },
-  { path: 'coberturas', title: 'Coberturas | Fotografe com Marco', desc: 'Acesse as coberturas fotográficas e escolha sua foto. Você será redirecionado à Foco Radical, onde vendemos as imagens.', image: FALLBACK_IMAGE },
+  { path: 'coberturas', title: 'Coberturas | Fotografe com Marco', desc: 'Acesse as coberturas fotográficas e escolha sua foto. Você será redirecionado à Foco Radical, onde vendemos as imagens.', image: imagemCoberturas },
   { path: 'blog', title: 'Blog | Fotografe com Marco', desc: 'Dicas de fotografia e de ciclismo pra quem treina e pra quem fotografa.', image: FALLBACK_IMAGE },
   { path: 'contato', title: 'Contato | Fotografe com Marco', desc: 'Fale com o Marco: dúvidas sobre fotos, coberturas ou parcerias.', image: FALLBACK_IMAGE },
 ];
