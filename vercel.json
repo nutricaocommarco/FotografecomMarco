@@ -1,0 +1,40 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/pagamento-confirmado", "destination": "/", "permanent": true },
+    { "source": "/blogs", "destination": "/blog", "permanent": true },
+    { "source": "/treino-de-ciclistas-e-corredores", "destination": "/", "permanent": true },
+    { "source": "/acessoria-atleta-moderno", "destination": "/", "permanent": true },
+    { "source": "/fotos-de-apartamentos", "destination": "/", "permanent": true },
+    { "source": "/portfolio-viaje-com-marco", "destination": "/", "permanent": true },
+    { "source": "/about", "destination": "/sobre", "permanent": true },
+    { "source": "/contact", "destination": "/contato", "permanent": true },
+
+    { "source": "/2020/11/11/qual-tamanho-de-imagem-escolher", "destination": "/qual-tamanho-de-imagem-escolher", "permanent": true },
+    { "source": "/2020/11/09/como-sair-bem-na-foto", "destination": "/como-sair-bem-na-foto", "permanent": true },
+    { "source": "/2020/11/06/validade-da-camera", "destination": "/validade-da-camera", "permanent": true },
+    { "source": "/2021/01/08/pesquisa-de-mercado", "destination": "/pesquisa-de-mercado", "permanent": true },
+
+    { "source": "/2021/02/17/o-que-e-cicloturismo-2", "destination": "/o-que-e-cicloturismo", "permanent": true },
+    { "source": "/2021/02/15/kit-primeiros-socorros-para-bike-2", "destination": "/kit-primeiros-socorros-para-bike", "permanent": true },
+    { "source": "/2021/02/18/como-fazer-isotonico-caseiro-2", "destination": "/como-fazer-isotonico-caseiro", "permanent": true },
+    { "source": "/2021/02/20/pedalar-emagrece-2", "destination": "/pedalar-emagrece", "permanent": true },
+    { "source": "/2021/02/26/como-prender-a-bike-2", "destination": "/como-prender-a-bike", "permanent": true },
+    { "source": "/2021/03/16/como-limpar-a-corrente-da-bike-2", "destination": "/como-limpar-a-corrente-da-bike", "permanent": true },
+    { "source": "/2021/03/14/quem-inventou-a-bicicleta-2", "destination": "/quem-inventou-a-bicicleta", "permanent": true },
+    { "source": "/2021/03/18/cuidados-ao-andar-de-bicicleta-2", "destination": "/cuidados-ao-andar-de-bicicleta", "permanent": true },
+    { "source": "/2021/03/22/qual-o-melhor-cadeado-para-bicicleta-2", "destination": "/qual-o-melhor-cadeado-para-bicicleta", "permanent": true },
+    { "source": "/2021/03/24/sapatilha-para-ciclismo-2", "destination": "/sapatilha-para-ciclismo", "permanent": true },
+    { "source": "/2021/03/28/como-tirar-peso-da-bike-2", "destination": "/como-tirar-peso-da-bike", "permanent": true },
+    { "source": "/2021/04/02/como-economizar-dinheiro-durante-o-pedal-2", "destination": "/como-economizar-dinheiro-durante-o-pedal", "permanent": true },
+    { "source": "/2021/04/04/primeiros-socorros-para-ciclistas-2", "destination": "/primeiros-socorros-para-ciclistas", "permanent": true },
+    { "source": "/2021/04/08/qual-valvula-para-camara-escolher-2", "destination": "/qual-valvula-para-camara-escolher", "permanent": true },
+    { "source": "/2021/04/16/mulher-ciclista-2", "destination": "/mulher-ciclista", "permanent": true },
+    { "source": "/2021/09/11/como-comecar-no-ciclismo-2", "destination": "/como-comecar-no-ciclismo", "permanent": true },
+    { "source": "/2021/10/06/o-que-fazer-em-miguel-pereira-de-bike", "destination": "/o-que-fazer-em-miguel-pereira-de-bike", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

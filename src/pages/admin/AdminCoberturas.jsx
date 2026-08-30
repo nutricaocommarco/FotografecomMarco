@@ -1,0 +1,216 @@
+import React, { useEffect, useState } from 'react';
+import { adminApi } from '../../lib/adminApi';
+import { buildLinkPrincipal, parseGaleriasColadas, gerarLinksGalerias } from '../../lib/focoRadicalLinks';
+
+const FORM_VAZIO = {
+  nome: 'Treino Prainha',
+  local: 'treino-prainha',
+  data_evento: '',
+  foto_capa: '',
+  obs: '',
+  data_saida_do_ar: '',
+};
+
+export default function AdminCoberturas() {
+  const [coberturas, setCoberturas] = useState([]);
+  const [form, setForm] = useState(FORM_VAZIO);
+  const [textoGalerias, setTextoGalerias] = useState('');
+  const [galeriasParseadas, setGaleriasParseadas] = useState([]);
+  const [esconderZero, setEsconderZero] = useState(true);
+  const [editandoId, setEditandoId] = useState(null);
+  const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
+
+  function carregar() {
+    adminApi.listCoberturas().then(setCoberturas).catch((e) => setErro(e.message));
+  }
+
+  useEffect(carregar, []);
+
+  function handleParsear() {
+    const galerias = parseGaleriasColadas(textoGalerias);
+    setGaleriasParseadas(galerias);
+  }
+
+  const galeriasVisiveis = esconderZero ? galeriasParseadas.filter((g) => (g.numFotos ?? 1) > 0) : galeriasParseadas;
+
+  async function handleSalvar(e) {
+    e.preventDefault();
+    if (!form.data_evento) {
+      setErro('Preencha a data do evento.');
+      return;
+    }
+    setSalvando(true);
+    setErro('');
+    try {
+      const linkPrincipal = buildLinkPrincipal(form.data_evento, form.local);
+      const galerias = gerarLinksGalerias(galeriasVisiveis, form.data_evento, form.local);
+
+      const payload = {
+        nome: form.nome,
+        data_evento: form.data_evento,
+        foto_capa: form.foto_capa || null,
+        obs: form.obs || null,
+        data_saida_do_ar: form.data_saida_do_ar || null,
+        link_principal: linkPrincipal,
+        galerias,
+      };
+
+      if (editandoId) {
+        await adminApi.updateCobertura(editandoId, payload);
+      } else {
+        await adminApi.createCobertura(payload);
+      }
+
+      setForm(FORM_VAZIO);
+      setTextoGalerias('');
+      setGaleriasParseadas([]);
+      setEditandoId(null);
+      carregar();
+    } catch (err) {
+      setErro(err.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  function handleEditar(c) {
+    setEditandoId(c.id);
+    setForm({
+      nome: c.nome,
+      local: c.local || 'treino-prainha',
+      data_evento: c.data_evento,
+      foto_capa: c.foto_capa || '',
+      obs: c.obs || '',
+      data_saida_do_ar: c.data_saida_do_ar || '',
+    });
+    setGaleriasParseadas(c.galerias || []);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleExcluir(id) {
+    if (!confirm('Excluir esta cobertura?')) return;
+    await adminApi.deleteCobertura(id);
+    carregar();
+  }
+
+  return (
+    <div className="max-w-4xl">
+      <h1 className="text-2xl font-black uppercase italic mb-8">Coberturas</h1>
+
+      <form onSubmit={handleSalvar} className="bg-white p-6 rounded-2xl border border-slate-200 mb-10 space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <input
+            placeholder="Nome/local do evento"
+            value={form.nome}
+            onChange={(e) => setForm({ ...form, nome: e.target.value })}
+            className="px-4 py-2.5 rounded-xl border border-slate-200"
+          />
+          <input
+            placeholder="Slug do local (ex: treino-prainha)"
+            value={form.local}
+            onChange={(e) => setForm({ ...form, local: e.target.value })}
+            className="px-4 py-2.5 rounded-xl border border-slate-200"
+          />
+          <div>
+            <label className="text-xs font-bold uppercase text-slate-500">Data do evento</label>
+            <input
+              type="date"
+              value={form.data_evento}
+              onChange={(e) => setForm({ ...form, data_evento: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase text-slate-500">Sai do ar em (opcional)</label>
+            <input
+              type="date"
+              value={form.data_saida_do_ar}
+              onChange={(e) => setForm({ ...form, data_saida_do_ar: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+            />
+          </div>
+        </div>
+
+        <input
+          placeholder="URL da foto de capa"
+          value={form.foto_capa}
+          onChange={(e) => setForm({ ...form, foto_capa: e.target.value })}
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+        />
+
+        <textarea
+          placeholder="OBS (opcional) — ex: fotos de chuva, sessão parcial..."
+          value={form.obs}
+          onChange={(e) => setForm({ ...form, obs: e.target.value })}
+          rows={2}
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+        />
+
+        <div>
+          <label className="text-xs font-bold uppercase text-slate-500">Cole aqui a lista de galerias do Excel</label>
+          <textarea
+            value={textoGalerias}
+            onChange={(e) => setTextoGalerias(e.target.value)}
+            rows={6}
+            placeholder={'Nome: Rockrider\nCódigo: rockrider\nNº de fotos: 0\n...'}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono text-sm"
+          />
+          <div className="flex items-center gap-3 mt-2">
+            <button type="button" onClick={handleParsear} className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold">
+              Gerar links
+            </button>
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" checked={esconderZero} onChange={(e) => setEsconderZero(e.target.checked)} />
+              Esconder galerias com 0 fotos
+            </label>
+          </div>
+        </div>
+
+        {galeriasParseadas.length > 0 && (
+          <div className="border border-slate-200 rounded-xl p-4 space-y-1 max-h-64 overflow-y-auto">
+            {galeriasVisiveis.map((g) => (
+              <div key={g.codigo} className="text-sm flex justify-between text-slate-700">
+                <span>
+                  {g.nome} {g.numFotos != null && <span className="text-slate-400">({g.numFotos} fotos)</span>}
+                </span>
+                <span className="text-slate-400 font-mono">{g.codigo}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {erro && <p className="text-red-600 text-sm">{erro}</p>}
+
+        <button
+          type="submit"
+          disabled={salvando}
+          className="bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60"
+        >
+          {salvando ? 'Salvando...' : editandoId ? 'Salvar alterações' : 'Criar cobertura'}
+        </button>
+      </form>
+
+      <div className="space-y-3">
+        {coberturas.map((c) => (
+          <div key={c.id} className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="font-bold text-slate-800">
+                {c.nome} — {c.data_evento}
+              </p>
+              <p className="text-xs text-slate-400">{c.galerias?.length || 0} galerias · sai do ar: {c.data_saida_do_ar || '—'}</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => handleEditar(c)} className="text-sm font-bold text-red-700">
+                Editar
+              </button>
+              <button onClick={() => handleExcluir(c.id)} className="text-sm font-bold text-slate-400 hover:text-red-700">
+                Excluir
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
