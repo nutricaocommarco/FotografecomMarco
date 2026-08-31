@@ -6,6 +6,28 @@ import CoberturaCard from '../components/CoberturaCard';
 
 const VALIDADE_CARD_FOTOS_ANTIGAS = '2026-12-30';
 
+function SkeletonBloco({ altura }) {
+  return (
+    <div
+      className="w-full max-w-2xl mx-auto my-10 bg-slate-100 rounded-[2rem] animate-pulse"
+      style={{ height: altura }}
+    />
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+      <div className="aspect-[4/3] bg-slate-100 animate-pulse" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 bg-slate-100 rounded-full w-3/4 mx-auto animate-pulse" />
+        <div className="h-4 bg-slate-100 rounded-full w-1/2 mx-auto animate-pulse" />
+        <div className="h-9 bg-slate-100 rounded-full w-2/3 mx-auto animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 function CardFotosAntigas() {
   const hoje = new Date().toISOString().slice(0, 10);
   if (hoje > VALIDADE_CARD_FOTOS_ANTIGAS) return null;
@@ -95,11 +117,16 @@ export default function Coberturas() {
           que te ajudo.
         </p>
 
-        {meta && (
-          <ProgressBar titulo={meta.titulo} descricao={meta.descricao} percentual={meta.percentual} prazo={meta.prazo} link={meta.link} linkLabel={meta.link_label} />
+        {loading ? (
+          <SkeletonBloco altura={140} />
+        ) : (
+          <>
+            {meta && (
+              <ProgressBar titulo={meta.titulo} descricao={meta.descricao} percentual={meta.percentual} prazo={meta.prazo} link={meta.link} linkLabel={meta.link_label} />
+            )}
+            {aviso && <EmBreveBox aviso={aviso} />}
+          </>
         )}
-
-        {aviso && <EmBreveBox aviso={aviso} />}
 
         {!supabaseConfigured && (
           <p className="text-slate-400 italic text-sm mb-8">
@@ -108,15 +135,19 @@ export default function Coberturas() {
         )}
 
         {loading ? (
-          <p className="text-slate-400">Carregando coberturas...</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
         ) : coberturas.length === 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <CardFotosAntigas />
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {coberturas.map((c) => (
-              <CoberturaCard key={c.id} cobertura={c} />
+            {coberturas.map((c, i) => (
+              <CoberturaCard key={c.id} cobertura={c} prioridade={i === 0} />
             ))}
             <CardFotosAntigas />
           </div>

@@ -33,7 +33,7 @@ function PillLink({ href, children }) {
   );
 }
 
-export default function CoberturaCard({ cobertura }) {
+export default function CoberturaCard({ cobertura, prioridade = false }) {
   const { nome, data_evento, foto_capa, link_principal, galerias, obs } = cobertura;
   const badge = formatarDataBadge(data_evento);
   const [bikesAbertas, setBikesAbertas] = useState(false);
@@ -47,7 +47,13 @@ export default function CoberturaCard({ cobertura }) {
     <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all">
       <a href={link_principal} target="_blank" rel="noreferrer" className="relative block aspect-[4/3] overflow-hidden rounded-t-[2rem] bg-slate-100">
         {foto_capa && (
-          <img src={foto_capa} alt={nome} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <img
+            src={foto_capa}
+            alt={nome}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+            loading={prioridade ? 'eager' : 'lazy'}
+            fetchpriority={prioridade ? 'high' : 'auto'}
+          />
         )}
         {badge && (
           <div className="absolute top-3 left-3 bg-white rounded-2xl shadow-lg px-3 py-1.5 text-center leading-none">
