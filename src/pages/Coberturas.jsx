@@ -7,6 +7,7 @@ import EmBreveBox from '../components/EmBreveBox';
 import ProgressBar from '../components/ProgressBar';
 
 const VALIDADE_CARD_FOTOS_ANTIGAS = '2026-12-30';
+const TAMANHO_PAGINA = 9;
 
 function SkeletonBloco({ altura }) {
   return (
@@ -50,16 +51,38 @@ function CardFotosAntigas() {
   );
 }
 
+// Monta a consulta de uma página de coberturas ativas (mais recentes primeiro).
+function consultaCoberturas(pagina) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const inicio = pagina * TAMANHO_PAGINA;
+  return supabase
+    .from('coberturas')
+    .select('*')
+    .lte('data_evento', hoje)
+    .or(`data_saida_do_ar.is.null,data_saida_do_ar.gte.${hoje}`)
+    .order('data_evento', { ascending: false })
+    .range(inicio, inicio + TAMANHO_PAGINA - 1);
+}
+
 export default function Coberturas() {
   const [coberturas, setCoberturas] = useState([]);
   const [loadingCoberturas, setLoadingCoberturas] = useState(true);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+  const [pagina, setPagina] = useState(0);
+  const [temMais, setTemMais] = useState(true);
   const [aviso, setAviso] = useState(null);
   const [meta, setMeta] = useState(null);
   const [loadingExtra, setLoadingExtra] = useState(true);
 
+  const [filtroData, setFiltroData] = useState('');
+  const [resultadoFiltro, setResultadoFiltro] = useState(null); // null = sem filtro ativo
+  const [buscandoData, setBuscandoData] = useState(false);
+
   // Coberturas busca sozinha, sem esperar a barra de progresso/aviso — é a
   // parte mais importante da página (e a mais pesada, com fotos), então não
-  // faz sentido atrasar ela por causa de coisas menores.
+  // faz sentido atrasar ela por causa de coisas menores. E vem paginada: com
+  // eventos ficando ativos por 6 meses, a lista pode crescer bastante, então
+  // só carrega a primeira leva de cara (igual feed do Instagram).
   useEffect(() => {
     let cancelado = false;
 
@@ -68,16 +91,13 @@ export default function Coberturas() {
         setLoadingCoberturas(false);
         return;
       }
-      const hoje = new Date().toISOString().slice(0, 10);
-      const { data, error } = await supabase
-        .from('coberturas')
-        .select('*')
-        .lte('data_evento', hoje)
-        .or(`data_saida_do_ar.is.null,data_saida_do_ar.gte.${hoje}`)
-        .order('data_evento', { ascending: false });
+      const { data, error } = await consultaCoberturas(0);
 
       if (cancelado) return;
-      if (!error) setCoberturas(data || []);
+      if (!error) {
+        setCoberturas(data || []);
+        setTemMais((data?.length || 0) === TAMANHO_PAGINA);
+      }
       setLoadingCoberturas(false);
     }
 
@@ -86,6 +106,32 @@ export default function Coberturas() {
       cancelado = true;
     };
   }, []);
+
+  async function handleBuscarData(e) {
+    e.preventDefault();
+    if (!filtroData || !supabaseConfigured) return;
+    setBuscandoData(true);
+    const { data, error } = await supabase.from('coberturas').select('*').eq('data_evento', filtroData).order('created_at', { ascending: false });
+    setResultadoFiltro(error ? [] : data || []);
+    setBuscandoData(false);
+  }
+
+  function limparFiltroData() {
+    setFiltroData('');
+    setResultadoFiltro(null);
+  }
+
+  async function handleCarregarMais() {
+    setCarregandoMais(true);
+    const proximaPagina = pagina + 1;
+    const { data, error } = await consultaCoberturas(proximaPagina);
+    if (!error) {
+      setCoberturas((atual) => [...atual, ...(data || [])]);
+      setPagina(proximaPagina);
+      setTemMais((data?.length || 0) === TAMANHO_PAGINA);
+    }
+    setCarregandoMais(false);
+  }
 
   useEffect(() => {
     let cancelado = false;
@@ -129,13 +175,34 @@ export default function Coberturas() {
           Acesse as coberturas fotográficas e escolha sua foto! Você será redirecionado ao site da Foco Radical, onde
           vendemos nossas imagens.
         </p>
-        <p className="text-slate-500 text-sm mb-12">
+        <p className="text-slate-500 text-sm mb-4">
           Não achou sua foto?{' '}
           <a href="/contato" className="text-red-700 underline">
             Fale comigo
           </a>{' '}
           que te ajudo.
         </p>
+
+        <form onSubmit={handleBuscarData} className="flex items-center gap-2 mb-12 text-sm">
+          <label htmlFor="busca-data" className="text-slate-400">
+            Buscar por data:
+          </label>
+          <input
+            id="busca-data"
+            type="date"
+            value={filtroData}
+            onChange={(e) => setFiltroData(e.target.value)}
+            className="px-2 py-1 rounded-lg border border-slate-200 text-slate-500 text-sm"
+          />
+          <button type="submit" className="text-slate-500 underline hover:text-red-700">
+            buscar
+          </button>
+          {resultadoFiltro !== null && (
+            <button type="button" onClick={limparFiltroData} className="text-slate-400 underline hover:text-red-700">
+              limpar
+            </button>
+          )}
+        </form>
 
         {loadingExtra ? (
           <SkeletonBloco altura={350} />
@@ -154,9 +221,25 @@ export default function Coberturas() {
           </p>
         )}
 
-        {loadingCoberturas ? (
+        {buscandoData ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 9 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : resultadoFiltro !== null ? (
+          resultadoFiltro.length === 0 ? (
+            <p className="text-slate-400">Nenhuma cobertura encontrada nessa data.</p>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {resultadoFiltro.map((c) => (
+                <CoberturaCard key={c.id} cobertura={c} />
+              ))}
+            </div>
+          )
+        ) : loadingCoberturas ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: TAMANHO_PAGINA }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
@@ -165,12 +248,26 @@ export default function Coberturas() {
             <CardFotosAntigas />
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {coberturas.map((c, i) => (
-              <CoberturaCard key={c.id} cobertura={c} prioridade={i === 0} />
-            ))}
-            <CardFotosAntigas />
-          </div>
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {coberturas.map((c, i) => (
+                <CoberturaCard key={c.id} cobertura={c} prioridade={i === 0} />
+              ))}
+              {!temMais && <CardFotosAntigas />}
+            </div>
+
+            {temMais && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={handleCarregarMais}
+                  disabled={carregandoMais}
+                  className="bg-white border border-red-200 text-red-700 px-8 py-3 rounded-full font-black uppercase text-sm hover:bg-red-50 transition-all disabled:opacity-60"
+                >
+                  {carregandoMais ? 'Carregando...' : 'Carregar mais coberturas'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
     </>
