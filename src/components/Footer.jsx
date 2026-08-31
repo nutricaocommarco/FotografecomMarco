@@ -22,7 +22,7 @@ export default function Footer() {
             <Instagram size={24} />
           </a>
           <a
-            href="mailto:contato@fotografecommarco.com"
+            href="mailto:fotografe.com.marco.a@gmail.com"
             className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-red-700 hover:scale-110 transition-all duration-300 border border-white/10 text-white"
             aria-label="Enviar um e-mail de contato"
           >
