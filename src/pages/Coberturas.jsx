@@ -44,7 +44,7 @@ function CardFotosAntigas() {
       <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
         <Archive className="text-red-700" size={28} />
       </div>
-      <h3 className="text-lg font-black text-slate-900 uppercase italic mb-2">Fotos mais antigas</h3>
+      <h2 className="text-lg font-black text-slate-900 uppercase italic mb-2">Fotos mais antigas</h2>
       <p className="text-sm text-slate-600">Procure suas fotos de coberturas anteriores no nosso site antigo.</p>
     </a>
   );

@@ -70,7 +70,7 @@ export default function Home() {
             <div className="w-14 h-14 bg-red-700 rounded-2xl flex items-center justify-center mb-5">
               <Image className="text-white" size={26} />
             </div>
-            <h3 className="text-xl font-black text-slate-900 uppercase italic mb-2">Coberturas</h3>
+            <h2 className="text-xl font-black text-slate-900 uppercase italic mb-2">Coberturas</h2>
             <p className="text-slate-600 font-medium">
               Ache sua foto por reconhecimento facial ou por galeria (bike, corrida, moto e mais).
             </p>
@@ -83,7 +83,7 @@ export default function Home() {
             <div className="w-14 h-14 bg-red-700 rounded-2xl flex items-center justify-center mb-5">
               <Camera className="text-white" size={26} />
             </div>
-            <h3 className="text-xl font-black text-slate-900 uppercase italic mb-2">Sobre Mim</h3>
+            <h2 className="text-xl font-black text-slate-900 uppercase italic mb-2">Sobre Mim</h2>
             <p className="text-slate-600 font-medium">Conheça um pouco da minha história com a fotografia esportiva.</p>
           </Link>
         </div>

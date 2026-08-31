@@ -63,7 +63,7 @@ export default function CoberturaCard({ cobertura, prioridade = false }) {
         )}
       </a>
       <div className="p-5 text-center">
-        <h3 className="text-lg font-black text-slate-900 uppercase italic mb-1">{nome}</h3>
+        <h2 className="text-lg font-black text-slate-900 uppercase italic mb-1">{nome}</h2>
         <p className="text-sm font-black uppercase tracking-widest text-red-700 mb-3">{formatarDataExtenso(data_evento)}</p>
         {obs && <p className="text-sm text-slate-600 italic mb-3">{obs}</p>}
 
