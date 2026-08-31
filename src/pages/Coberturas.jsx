@@ -175,13 +175,24 @@ export default function Coberturas() {
           Acesse as coberturas fotográficas e escolha sua foto! Você será redirecionado ao site da Foco Radical, onde
           vendemos nossas imagens.
         </p>
-        <p className="text-slate-500 text-sm mb-4">
+        <p className="text-slate-500 text-sm mb-12">
           Não achou sua foto?{' '}
           <a href="/contato" className="text-red-700 underline">
             Fale comigo
           </a>{' '}
           que te ajudo.
         </p>
+
+        {loadingExtra ? (
+          <SkeletonBloco altura={350} />
+        ) : (
+          <>
+            {meta && (
+              <ProgressBar titulo={meta.titulo} descricao={meta.descricao} percentual={meta.percentual} prazo={meta.prazo} link={meta.link} linkLabel={meta.link_label} />
+            )}
+            {aviso && <EmBreveBox aviso={aviso} />}
+          </>
+        )}
 
         <form onSubmit={handleBuscarData} className="flex items-center gap-2 mb-12 text-sm">
           <label htmlFor="busca-data" className="text-slate-400">
@@ -203,17 +214,6 @@ export default function Coberturas() {
             </button>
           )}
         </form>
-
-        {loadingExtra ? (
-          <SkeletonBloco altura={350} />
-        ) : (
-          <>
-            {meta && (
-              <ProgressBar titulo={meta.titulo} descricao={meta.descricao} percentual={meta.percentual} prazo={meta.prazo} link={meta.link} linkLabel={meta.link_label} />
-            )}
-            {aviso && <EmBreveBox aviso={aviso} />}
-          </>
-        )}
 
         {!supabaseConfigured && (
           <p className="text-slate-400 italic text-sm mb-8">
