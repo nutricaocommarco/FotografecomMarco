@@ -25,6 +25,21 @@ function ScrollToTop() {
   return null;
 }
 
+// Manda um page_view pro GA4 a cada troca de rota (o site é uma SPA, então só
+// o carregamento inicial dispararia pageview sozinho sem isso).
+function AnalyticsTracker() {
+  const location = useLocation();
+  React.useEffect(() => {
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', 'page_view', {
+      page_path: location.pathname + location.search,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }, [location]);
+  return null;
+}
+
 function SiteLayout({ children }) {
   return (
     <div className="min-h-screen font-sans text-slate-800 bg-white flex flex-col selection:bg-red-200">
@@ -40,6 +55,7 @@ export default function App() {
     <HelmetProvider>
       <Router>
         <ScrollToTop />
+        <AnalyticsTracker />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/admin/*" element={<AdminLayout />}>
