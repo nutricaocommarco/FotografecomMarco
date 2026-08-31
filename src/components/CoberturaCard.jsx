@@ -14,10 +14,18 @@ function formatarDataBadge(dataEvento) {
   return { dia, mes: MESES_ABREV[mes - 1] };
 }
 
+const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
 function formatarDataExtenso(dataEvento) {
   if (!dataEvento) return '';
   const [ano, mes, dia] = dataEvento.split('-').map(Number);
   return `${dia} de ${MESES_ABREV[mes - 1]} de ${ano}`;
+}
+
+function formatarDiaSemana(dataEvento) {
+  if (!dataEvento) return '';
+  const [ano, mes, dia] = dataEvento.split('-').map(Number);
+  return DIAS_SEMANA[new Date(ano, mes - 1, dia).getDay()];
 }
 
 function PillLink({ href, children }) {
@@ -64,7 +72,8 @@ export default function CoberturaCard({ cobertura, prioridade = false }) {
       </a>
       <div className="p-5 text-center">
         <h2 className="text-lg font-black text-slate-900 uppercase italic mb-1">{nome}</h2>
-        <p className="text-sm font-black uppercase tracking-widest text-red-700 mb-3">{formatarDataExtenso(data_evento)}</p>
+        <p className="text-sm font-black uppercase tracking-widest text-red-700">{formatarDataExtenso(data_evento)}</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">({formatarDiaSemana(data_evento)})</p>
         {obs && <p className="text-sm text-slate-600 italic mb-3">{obs}</p>}
 
         <a
