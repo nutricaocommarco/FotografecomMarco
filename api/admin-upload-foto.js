@@ -18,6 +18,9 @@ export default async function handler(req, res) {
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, buffer, {
     contentType: contentType || 'image/jpeg',
     upsert: false,
+    // Nome do arquivo é único (timestamp + aleatório), então pode cachear "pra sempre"
+    // sem risco de servir conteúdo desatualizado.
+    cacheControl: '31536000',
   });
   if (uploadError) return res.status(500).json({ error: uploadError.message });
 

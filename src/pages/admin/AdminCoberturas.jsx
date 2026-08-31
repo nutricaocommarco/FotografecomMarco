@@ -40,9 +40,9 @@ export default function AdminCoberturas() {
     });
   }
 
-  // Redimensiona pra no máximo 1600px de largura e recomprime em JPEG — o site
-  // fica bem mais rápido pra carregar sem perda visível de qualidade na capa.
-  function comprimirImagem(file, larguraMaxima = 1600, qualidade = 0.82) {
+  // Redimensiona pra no máximo 1600px de largura e recomprime em WebP (bem mais leve
+  // que JPEG na mesma qualidade visual) — o site fica mais rápido pra carregar.
+  function comprimirImagem(file, larguraMaxima = 1600, qualidade = 0.78) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const urlTemp = URL.createObjectURL(file);
@@ -54,7 +54,7 @@ export default function AdminCoberturas() {
         canvas.height = Math.round(img.height * escala);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Falha ao comprimir imagem'))), 'image/jpeg', qualidade);
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Falha ao comprimir imagem'))), 'image/webp', qualidade);
       };
       img.onerror = reject;
       img.src = urlTemp;
@@ -73,7 +73,7 @@ export default function AdminCoberturas() {
     try {
       const comprimida = await comprimirImagem(file);
       const fileBase64 = await arquivoParaBase64(comprimida);
-      const { url } = await adminApi.uploadFoto(fileBase64, 'capa.jpg', 'image/jpeg');
+      const { url } = await adminApi.uploadFoto(fileBase64, 'capa.webp', 'image/webp');
       setForm((f) => ({ ...f, foto_capa: url }));
     } catch (err) {
       setErro('Falha ao enviar foto: ' + err.message);

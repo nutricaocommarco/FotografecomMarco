@@ -1,0 +1,16 @@
+# Fotografe com Marco
+
+Site de fotografia esportiva no Rio de Janeiro. Marco Aurélio fotografa treinos de bike, corrida e caminhada, principalmente na Prainha (Recreio dos Bandeirantes), e disponibiliza as fotos pra venda através da Foco Radical.
+
+## Páginas principais
+
+- [Início](https://www.fotografecommarco.com/): apresentação e chamada pra Coberturas
+- [Coberturas](https://www.fotografecommarco.com/coberturas): lista de eventos fotografados, cada um com link pra galeria de fotos na Foco Radical
+- [Sobre](https://www.fotografecommarco.com/sobre): história do fotógrafo
+- [Blog](https://www.fotografecommarco.com/blog): dicas de fotografia e de ciclismo
+- [Contato](https://www.fotografecommarco.com/contato): formulário de contato
+
+## Observações
+
+- As fotos em si não são vendidas neste site: cada cobertura leva a pessoa até a Foco Radical (maj.focoradical.com.br), onde a compra é feita.
+- O conteúdo de Coberturas muda com frequência (novos eventos toda semana, eventos antigos saem do ar depois de um tempo).

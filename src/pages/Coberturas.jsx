@@ -3,6 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { supabase, supabaseConfigured } from '../lib/supabaseClient';
 import { Archive } from 'lucide-react';
 import CoberturaCard from '../components/CoberturaCard';
+import EmBreveBox from '../components/EmBreveBox';
+import ProgressBar from '../components/ProgressBar';
 
 const VALIDADE_CARD_FOTOS_ANTIGAS = '2026-12-30';
 
@@ -47,43 +49,61 @@ function CardFotosAntigas() {
     </a>
   );
 }
-import EmBreveBox from '../components/EmBreveBox';
-import ProgressBar from '../components/ProgressBar';
 
 export default function Coberturas() {
   const [coberturas, setCoberturas] = useState([]);
+  const [loadingCoberturas, setLoadingCoberturas] = useState(true);
   const [aviso, setAviso] = useState(null);
   const [meta, setMeta] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingExtra, setLoadingExtra] = useState(true);
+
+  // Coberturas busca sozinha, sem esperar a barra de progresso/aviso — é a
+  // parte mais importante da página (e a mais pesada, com fotos), então não
+  // faz sentido atrasar ela por causa de coisas menores.
+  useEffect(() => {
+    let cancelado = false;
+
+    async function carregar() {
+      if (!supabaseConfigured) {
+        setLoadingCoberturas(false);
+        return;
+      }
+      const hoje = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from('coberturas')
+        .select('*')
+        .lte('data_evento', hoje)
+        .or(`data_saida_do_ar.is.null,data_saida_do_ar.gte.${hoje}`)
+        .order('data_evento', { ascending: false });
+
+      if (cancelado) return;
+      if (!error) setCoberturas(data || []);
+      setLoadingCoberturas(false);
+    }
+
+    carregar();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelado = false;
 
     async function carregar() {
       if (!supabaseConfigured) {
-        setLoading(false);
+        setLoadingExtra(false);
         return;
       }
-
-      const hoje = new Date().toISOString().slice(0, 10);
-
-      const [coberturasRes, avisoRes, metaRes] = await Promise.all([
-        supabase
-          .from('coberturas')
-          .select('*')
-          .lte('data_evento', hoje)
-          .or(`data_saida_do_ar.is.null,data_saida_do_ar.gte.${hoje}`)
-          .order('data_evento', { ascending: false }),
+      const [avisoRes, metaRes] = await Promise.all([
         supabase.from('avisos_em_breve').select('*').eq('ativo', true).order('created_at', { ascending: false }).limit(1),
         supabase.from('metas_progresso').select('*').eq('ativo', true).order('created_at', { ascending: false }).limit(1),
       ]);
 
       if (cancelado) return;
-
-      if (!coberturasRes.error) setCoberturas(coberturasRes.data || []);
       if (!avisoRes.error) setAviso(avisoRes.data?.[0] || null);
       if (!metaRes.error) setMeta(metaRes.data?.[0] || null);
-      setLoading(false);
+      setLoadingExtra(false);
     }
 
     carregar();
@@ -117,7 +137,7 @@ export default function Coberturas() {
           que te ajudo.
         </p>
 
-        {loading ? (
+        {loadingExtra ? (
           <SkeletonBloco altura={140} />
         ) : (
           <>
@@ -134,7 +154,7 @@ export default function Coberturas() {
           </p>
         )}
 
-        {loading ? (
+        {loadingCoberturas ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonCard key={i} />
