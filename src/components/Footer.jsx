@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Mail } from 'lucide-react';
+import { Instagram, Mail, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -27,6 +27,15 @@ export default function Footer() {
             aria-label="Enviar um e-mail de contato"
           >
             <Mail size={24} />
+          </a>
+          <a
+            href="https://wa.me/5521997704300"
+            target="_blank"
+            rel="noreferrer"
+            className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-red-700 hover:scale-110 transition-all duration-300 border border-white/10 text-white"
+            aria-label="Falar no WhatsApp"
+          >
+            <MessageCircle size={24} />
           </a>
         </div>
 
