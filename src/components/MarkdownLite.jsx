@@ -1,6 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 // Converte **negrito** e [texto](link) dentro de uma linha em nós React.
+// Links internos (começando com "/") navegam na mesma aba via React Router;
+// links externos abrem em nova aba.
 function renderInline(text) {
   const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
   return parts.map((part, i) => {
@@ -9,9 +12,17 @@ function renderInline(text) {
 
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
+      const [, texto, href] = linkMatch;
+      if (href.startsWith('/')) {
+        return (
+          <Link key={i} to={href} className="text-red-700 underline hover:text-red-800">
+            {texto}
+          </Link>
+        );
+      }
       return (
-        <a key={i} href={linkMatch[2]} target="_blank" rel="noreferrer" className="text-red-700 underline hover:text-red-800">
-          {linkMatch[1]}
+        <a key={i} href={href} target="_blank" rel="noreferrer" className="text-red-700 underline hover:text-red-800">
+          {texto}
         </a>
       );
     }

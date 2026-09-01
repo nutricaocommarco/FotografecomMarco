@@ -44,9 +44,9 @@ const imagemCoberturas = fotoCoberturaRecente || FALLBACK_IMAGE;
 console.log('Imagem de prévia das Coberturas:', imagemCoberturas);
 
 const rotasEstaticas = [
-  { path: '', title: 'Fotografe com Marco | Fotografia Esportiva no Rio de Janeiro', desc: 'Cobertura fotográfica de treinos e eventos esportivos no Rio de Janeiro. Encontre e compre suas fotos de bike, corrida e muito mais.', image: imagemCoberturas },
-  { path: 'sobre', title: 'Sobre | Fotografe com Marco', desc: 'Conheça a história de Marco Aurélio, fotógrafo esportivo no Rio de Janeiro.', image: FALLBACK_IMAGE },
-  { path: 'coberturas', title: 'Coberturas | Fotografe com Marco', desc: 'Acesse as coberturas fotográficas e escolha sua foto. Você será redirecionado à Foco Radical, onde vendemos as imagens.', image: imagemCoberturas },
+  { path: '', title: 'Fotógrafo na Prainha (RJ) | Fotografe com Marco', desc: 'Fotógrafo esportivo na Prainha, Rio de Janeiro. Cobertura fotográfica dos treinos de bike, corrida e caminhada na Prainha e Recreio dos Bandeirantes. Encontre e compre suas fotos aqui.', image: imagemCoberturas },
+  { path: 'sobre', title: 'Sobre | Fotógrafo na Prainha, RJ', desc: 'Conheça Marco Aurélio, fotógrafo esportivo na Prainha (Rio de Janeiro), especializado em fotografar treinos de bike, corrida e caminhada.', image: FALLBACK_IMAGE },
+  { path: 'coberturas', title: 'Coberturas de Treino na Prainha | Fotografe com Marco', desc: 'Fotos dos treinos de bike, corrida e caminhada na Prainha (Rio de Janeiro). Acesse as coberturas fotográficas e escolha sua foto — você será redirecionado à Foco Radical.', image: imagemCoberturas },
   { path: 'blog', title: 'Blog | Fotografe com Marco', desc: 'Dicas de fotografia e de ciclismo pra quem treina e pra quem fotografa.', image: FALLBACK_IMAGE },
   { path: 'contato', title: 'Contato | Fotografe com Marco', desc: 'Fale com o Marco: dúvidas sobre fotos, coberturas ou parcerias.', image: FALLBACK_IMAGE },
 ];

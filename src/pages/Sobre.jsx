@@ -5,8 +5,8 @@ export default function Sobre() {
   return (
     <>
       <Helmet>
-        <title>Sobre | Fotografe com Marco</title>
-        <meta name="description" content="Conheça a história de Marco Aurélio, fotógrafo esportivo no Rio de Janeiro." />
+        <title>Sobre | Fotógrafo na Prainha, RJ</title>
+        <meta name="description" content="Conheça Marco Aurélio, fotógrafo esportivo na Prainha (Rio de Janeiro), especializado em fotografar treinos de bike, corrida e caminhada." />
       </Helmet>
 
       <section className="py-24 container mx-auto px-6 max-w-3xl">

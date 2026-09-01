@@ -8,10 +8,10 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Fotografe com Marco | Fotografia Esportiva no Rio de Janeiro</title>
+        <title>Fotógrafo na Prainha (RJ) | Fotografe com Marco</title>
         <meta
           name="description"
-          content="Cobertura fotográfica de treinos e eventos esportivos no Rio de Janeiro. Encontre e compre suas fotos de bike, corrida e muito mais."
+          content="Fotógrafo esportivo na Prainha, Rio de Janeiro. Cobertura fotográfica dos treinos de bike, corrida e caminhada na Prainha e Recreio dos Bandeirantes. Encontre e compre suas fotos aqui."
         />
         <script type="application/ld+json">
           {JSON.stringify({
@@ -21,13 +21,21 @@ export default function Home() {
             image: 'https://raw.githubusercontent.com/marcoaurelioneves/fotografecommarco-site/main/public/logo.svg',
             '@id': 'https://www.fotografecommarco.com/',
             url: 'https://www.fotografecommarco.com/',
+            telephone: '+5521997704300',
             address: {
               '@type': 'PostalAddress',
               addressLocality: 'Rio de Janeiro',
               addressRegion: 'RJ',
               addressCountry: 'BR',
             },
-            description: 'Fotógrafo esportivo especializado em coberturas de treinos de bike, corrida e caminhada no Rio de Janeiro.',
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: -23.0177,
+              longitude: -43.5013,
+            },
+            areaServed: ['Prainha', 'Recreio dos Bandeirantes', 'Rio de Janeiro'],
+            description: 'Fotógrafo esportivo na Prainha (Rio de Janeiro), especializado em coberturas de treinos de bike, corrida e caminhada.',
+            sameAs: ['https://instagram.com/fotografecommarco'],
           })}
         </script>
       </Helmet>
@@ -37,13 +45,13 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="flex-1 z-10">
               <span className="inline-block bg-white text-red-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-6 shadow-sm border border-red-200">
-                Fotografia Esportiva • Rio de Janeiro
+                Fotógrafo Esportivo • Prainha, Rio de Janeiro
               </span>
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-8 text-slate-900 italic uppercase leading-tight">
                 FOTOGRAFE COM <span className="text-red-700">MARCO</span>
               </h1>
               <p className="text-lg text-slate-600 mb-8 max-w-xl font-medium leading-relaxed mx-auto md:mx-0">
-                Encontre suas fotos aqui! Cobertura fotográfica de treinos e eventos esportivos, com galerias por reconhecimento facial e por categoria.
+                Fotógrafo esportivo na Prainha! Encontre suas fotos aqui: cobertura fotográfica dos treinos de bike, corrida e caminhada na Prainha e no Recreio dos Bandeirantes, com galerias por reconhecimento facial e por categoria.
               </p>
               <Link
                 to="/coberturas"

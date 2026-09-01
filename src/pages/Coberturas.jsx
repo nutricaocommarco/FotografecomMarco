@@ -161,19 +161,19 @@ export default function Coberturas() {
   return (
     <>
       <Helmet>
-        <title>Coberturas | Fotografe com Marco</title>
+        <title>Coberturas de Treino na Prainha | Fotografe com Marco</title>
         <meta
           name="description"
-          content="Acesse as coberturas fotográficas e escolha sua foto. Você será redirecionado à Foco Radical, onde vendemos as imagens."
+          content="Fotos dos treinos de bike, corrida e caminhada na Prainha (Rio de Janeiro). Acesse as coberturas fotográficas e escolha sua foto — você será redirecionado à Foco Radical."
         />
       </Helmet>
 
       <section className="py-24 container mx-auto px-6 max-w-6xl">
-        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Coberturas</h1>
+        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Coberturas na Prainha</h1>
         <div className="w-20 h-2 bg-red-700 rounded-full mb-6"></div>
         <p className="text-slate-600 font-medium max-w-2xl mb-2">
-          Acesse as coberturas fotográficas e escolha sua foto! Você será redirecionado ao site da Foco Radical, onde
-          vendemos nossas imagens.
+          Acesse as coberturas fotográficas dos treinos na Prainha e escolha sua foto! Você será redirecionado ao site
+          da Foco Radical, onde vendemos nossas imagens.
         </p>
         <p className="text-slate-500 text-sm mb-12">
           Não achou sua foto?{' '}
