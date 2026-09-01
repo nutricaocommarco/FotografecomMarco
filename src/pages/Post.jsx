@@ -5,6 +5,14 @@ import { getPostBySlug } from '../data/posts';
 import { postsContent } from '../data/postsContent';
 import MarkdownLite from '../components/MarkdownLite';
 
+// new Date('2026-08-31') é interpretado como UTC meia-noite, o que faz a data
+// aparecer um dia antes em fusos atrás do UTC (como o do Brasil). Construir a
+// partir dos componentes numéricos usa o fuso local e evita esse problema.
+function formatarDataLocal(data) {
+  const [ano, mes, dia] = data.split('-').map(Number);
+  return new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
 export default function Post() {
   const { slug } = useParams();
   const post = getPostBySlug(slug);
@@ -26,7 +34,7 @@ export default function Post() {
         </Link>
         <h1 className="text-3xl md:text-4xl font-black text-slate-900 uppercase italic mt-4 mb-4">{post.title}</h1>
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">
-          {new Date(post.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+          {formatarDataLocal(post.date)}
         </p>
 
         {content?.coverImage && (
