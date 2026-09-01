@@ -1,12 +1,32 @@
 // Fotos de nascer do sol na Prainha — geradas por script a partir do acervo local.
 export const fotosNascerDoSol = [
   {
+    "slug": "nascer-do-sol-prainha-2026-04-26-01",
+    "data": "2026-04-26"
+  },
+  {
+    "slug": "nascer-do-sol-prainha-2026-04-05-01",
+    "data": "2026-04-05"
+  },
+  {
+    "slug": "nascer-do-sol-prainha-2026-04-04-01",
+    "data": "2026-04-04"
+  },
+  {
+    "slug": "nascer-do-sol-prainha-2026-03-08-03",
+    "data": "2026-03-08"
+  },
+  {
     "slug": "nascer-do-sol-prainha-2026-03-08-01",
     "data": "2026-03-08"
   },
   {
     "slug": "nascer-do-sol-prainha-2026-03-08-02",
     "data": "2026-03-08"
+  },
+  {
+    "slug": "nascer-do-sol-prainha-2026-02-22-02",
+    "data": "2026-02-22"
   },
   {
     "slug": "nascer-do-sol-prainha-2026-02-22-01",
