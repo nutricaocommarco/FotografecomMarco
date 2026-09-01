@@ -7,7 +7,7 @@ const SITE = 'https://www.fotografecommarco.com';
 
 const { posts } = await import('./src/data/posts.js');
 
-const rotasEstaticas = ['/', '/sobre', '/coberturas', '/blog', '/contato'];
+const rotasEstaticas = ['/', '/sobre', '/coberturas', '/blog', '/contato', '/nascer-do-sol-na-prainha'];
 
 const urls = [
   ...rotasEstaticas.map((rota) => ({ loc: `${SITE}${rota}`, changefreq: rota === '/coberturas' ? 'daily' : 'monthly' })),

@@ -12,6 +12,7 @@ const Coberturas = lazy(() => import('./pages/Coberturas'));
 const Blog = lazy(() => import('./pages/Blog'));
 const Post = lazy(() => import('./pages/Post'));
 const Contato = lazy(() => import('./pages/Contato'));
+const NascerDoSol = lazy(() => import('./pages/NascerDoSol'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminCoberturas = lazy(() => import('./pages/admin/AdminCoberturas'));
 const AdminEmBreve = lazy(() => import('./pages/admin/AdminEmBreve'));
@@ -75,6 +76,7 @@ export default function App() {
                     <Route path="/coberturas" element={<Coberturas />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/contato" element={<Contato />} />
+                    <Route path="/nascer-do-sol-na-prainha" element={<NascerDoSol />} />
                     <Route path="/:slug" element={<Post />} />
                   </Routes>
                 </SiteLayout>

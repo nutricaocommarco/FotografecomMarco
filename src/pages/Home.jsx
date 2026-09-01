@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ChevronRight, Camera, Image } from 'lucide-react';
+import { ChevronRight, Camera, Image, Sunrise } from 'lucide-react';
 import YouTubeLazy from '../components/YouTubeLazy';
 
 export default function Home() {
@@ -70,7 +70,7 @@ export default function Home() {
       </header>
 
       <section className="py-24 bg-white container mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <Link
             to="/coberturas"
             className="p-8 bg-slate-50 rounded-[2.5rem] border border-red-50 hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-start"
@@ -93,6 +93,17 @@ export default function Home() {
             </div>
             <h2 className="text-xl font-black text-slate-900 uppercase italic mb-2">Sobre Mim</h2>
             <p className="text-slate-600 font-medium">Conheça um pouco da minha história com a fotografia esportiva.</p>
+          </Link>
+
+          <Link
+            to="/nascer-do-sol-na-prainha"
+            className="p-8 bg-slate-50 rounded-[2.5rem] border border-red-50 hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-start"
+          >
+            <div className="w-14 h-14 bg-red-700 rounded-2xl flex items-center justify-center mb-5">
+              <Sunrise className="text-white" size={26} />
+            </div>
+            <h2 className="text-xl font-black text-slate-900 uppercase italic mb-2">Nascer do Sol</h2>
+            <p className="text-slate-600 font-medium">Acervo de fotos do nascer do sol na Prainha, grátis pra baixar.</p>
           </Link>
         </div>
       </section>

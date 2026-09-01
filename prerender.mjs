@@ -49,6 +49,12 @@ const rotasEstaticas = [
   { path: 'coberturas', title: 'Coberturas de Treino na Prainha | Fotografe com Marco', desc: 'Fotos dos treinos de bike, corrida e caminhada na Prainha (Rio de Janeiro). Acesse as coberturas fotográficas e escolha sua foto — você será redirecionado à Foco Radical.', image: imagemCoberturas },
   { path: 'blog', title: 'Blog | Fotografe com Marco', desc: 'Dicas de fotografia e de ciclismo pra quem treina e pra quem fotografa.', image: FALLBACK_IMAGE },
   { path: 'contato', title: 'Contato | Fotografe com Marco', desc: 'Fale com o Marco: dúvidas sobre fotos, coberturas ou parcerias.', image: FALLBACK_IMAGE },
+  {
+    path: 'nascer-do-sol-na-prainha',
+    title: 'Nascer do Sol na Prainha — Fotos Grátis para Baixar | Fotografe com Marco',
+    desc: 'Acervo de fotos do nascer do sol na Prainha (Recreio dos Bandeirantes, RJ), registradas ao longo dos anos. Veja e baixe gratuitamente em boa resolução.',
+    image: `${SITE}/nascer-do-sol/full/nascer-do-sol-prainha-2026-03-08-01.jpg`,
+  },
 ];
 
 const rotasDoBlog = posts.map((post) => {
