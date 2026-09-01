@@ -30,8 +30,8 @@ export default function Home() {
             },
             geo: {
               '@type': 'GeoCoordinates',
-              latitude: -23.0177,
-              longitude: -43.5013,
+              latitude: -23.0400447,
+              longitude: -43.5007404,
             },
             areaServed: ['Prainha', 'Recreio dos Bandeirantes', 'Rio de Janeiro'],
             description: 'Fotógrafo esportivo na Prainha (Rio de Janeiro), especializado em coberturas de treinos de bike, corrida e caminhada.',

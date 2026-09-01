@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import LocationMap from '../components/LocationMap';
 
 // Formspree: mesmo serviço já usado hoje pra receber as mensagens do site.
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mwlkpgwe';
@@ -76,6 +77,13 @@ export default function Contato() {
             {status === 'error' && <p className="text-red-600 text-sm">Não deu pra enviar agora, tenta de novo em instantes.</p>}
           </form>
         )}
+
+        <div className="mt-16">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">
+            Onde fotografo — Mirante Ponta da Prainha
+          </h2>
+          <LocationMap />
+        </div>
       </section>
     </>
   );
