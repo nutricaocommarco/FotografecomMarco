@@ -8,9 +8,11 @@ const { postsContent } = await import('./src/data/postsContent.js');
 const SITE = 'https://www.fotografecommarco.com';
 const FALLBACK_IMAGE = 'https://raw.githubusercontent.com/nutricaocommarco/FotografecomMarco/main/public/marca-dagua.png';
 
-// Usa o otimizador de imagens do WordPress.com pras fotos que ainda estão lá hospedadas.
+// Usa o otimizador de imagens do WordPress.com pras fotos que ainda estão lá hospedadas;
+// caminhos locais (ex: /capa-x.jpg, de posts novos) só viram URL absoluta do próprio site.
 function ogImageFrom(url) {
   if (!url) return FALLBACK_IMAGE;
+  if (url.startsWith('/')) return `${SITE}${url}`;
   const clean = url.replace(/^https?:\/\//i, '');
   return `https://i0.wp.com/${clean}?w=1200&strip=all&quality=85`;
 }
