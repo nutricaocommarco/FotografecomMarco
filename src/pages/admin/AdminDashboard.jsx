@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -71,55 +71,116 @@ function GraficoFrequencia({ titulo, distribuicao }) {
   );
 }
 
-function montarResumoMarkdown({ mesSelecionado, linhaEventos, snapshot, previsao, mesAtualStr }) {
-  const linhas = [`# Resumo — ${formatarMes(`${mesSelecionado}-01`)}`, ''];
+function formatarPct(v) {
+  return v == null ? '—' : `${v.toFixed(1)}%`;
+}
 
-  if (linhaEventos) {
-    linhas.push(
-      '## Eventos',
-      `- Fotos enviadas: ${linhaEventos.fotosEnviadas}`,
-      `- Fotos vendidas: ${linhaEventos.fotosVendidas}`,
-      `- Taxa de conversão: ${linhaEventos.taxaConversao != null ? linhaEventos.taxaConversao.toFixed(1) + '%' : '—'}`,
-      `- Receita total: ${formatarReal(linhaEventos.receitaTotal)}`,
-      `- Receita por categoria: Baixa ${formatarReal(linhaEventos.receitaBaixa)} · Média ${formatarReal(linhaEventos.receitaMedia)} · Alta ${formatarReal(linhaEventos.receitaAlta)} · Premium ${formatarReal(linhaEventos.receitaPremium)} · Vídeo ${formatarReal(linhaEventos.receitaVideo)}`,
-      `- Rostos reconhecidos: ${linhaEventos.rostosReconhecidos}`,
-      '',
-    );
-  } else {
-    linhas.push('## Eventos', '- Sem eventos registrados nesse mês.', '');
+function freqParaTexto(distribuicao) {
+  const entradas = Object.entries(distribuicao || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
+  return entradas.length ? entradas.map(([q, c]) => `${q}x: ${c}`).join(', ') : '—';
+}
+
+function agruparEventosPorAno(porMes) {
+  const porAno = new Map();
+  for (const m of porMes) {
+    const ano = m.mes.slice(0, 4);
+    if (!porAno.has(ano)) porAno.set(ano, { ano, fotosEnviadas: 0, fotosVendidas: 0, receitaTotal: 0, rostosReconhecidos: 0 });
+    const r = porAno.get(ano);
+    r.fotosEnviadas += m.fotosEnviadas || 0;
+    r.fotosVendidas += m.fotosVendidas || 0;
+    r.receitaTotal += m.receitaTotal || 0;
+    r.rostosReconhecidos += m.rostosReconhecidos || 0;
   }
+  return [...porAno.values()]
+    .map((r) => ({ ...r, taxaConversao: r.fotosEnviadas ? (r.fotosVendidas / r.fotosEnviadas) * 100 : null }))
+    .sort((a, b) => a.ano.localeCompare(b.ano));
+}
 
-  if (snapshot) {
-    const freq = Object.entries(snapshot.distribuicao_frequencia || {})
-      .sort((a, b) => Number(a[0]) - Number(b[0]))
-      .map(([q, c]) => `${q}x: ${c}`)
-      .join(', ');
-    linhas.push(
-      '## Compradores',
-      `- Transações: ${snapshot.total_transacoes}`,
-      `- Compradores únicos: ${snapshot.total_compradores_unicos}`,
-      `- Valor bruto total: ${formatarReal(snapshot.valor_bruto_total)}`,
-      `- Ticket médio: ${formatarReal(snapshot.ticket_medio)}`,
-      `- Taxa de recompra no mês: ${snapshot.taxa_recompra_mes.toFixed(1)}%`,
-      `- Novos / recorrentes: ${snapshot.compradores_novos} / ${snapshot.compradores_recorrentes}`,
-      `- Distribuição de frequência: ${freq || '—'}`,
-      '',
-    );
-  } else {
-    linhas.push('## Compradores', '- Nenhum CSV importado pra esse mês.', '');
+function agruparCompradoresPorAno(compradoresPorMes) {
+  const porAno = new Map();
+  for (const m of compradoresPorMes) {
+    const ano = m.mes.slice(0, 4);
+    if (!porAno.has(ano)) porAno.set(ano, { ano, totalTransacoes: 0, valorBrutoTotal: 0, novos: 0, recorrentes: 0 });
+    const r = porAno.get(ano);
+    r.totalTransacoes += m.totalTransacoes || 0;
+    r.valorBrutoTotal += m.valorBrutoTotal || 0;
+    r.novos += m.compradoresNovos || 0;
+    r.recorrentes += m.compradoresRecorrentes || 0;
   }
+  return [...porAno.values()]
+    .map((r) => ({
+      ...r,
+      ticketMedio: r.totalTransacoes ? r.valorBrutoTotal / r.totalTransacoes : null,
+      pctRecorrentes: r.novos + r.recorrentes ? (r.recorrentes / (r.novos + r.recorrentes)) * 100 : null,
+    }))
+    .sort((a, b) => a.ano.localeCompare(b.ano));
+}
 
-  if (mesSelecionado === mesAtualStr && previsao) {
-    linhas.push('## Previsão (mês em andamento)');
+// Relatório completo pra colar em outra conversa — mês a mês e ano a ano,
+// eventos e compradores, previsão do mês em andamento e distribuição de
+// frequência de compra por ano (não só o ano selecionado no dashboard).
+function montarResumoCompleto({ porMes, compradoresPorMes, previsao, mesAtualStr, frequenciaPorAno }) {
+  const linhas = [`# Fotografe com Marco — Resumo Completo`, `_Gerado em ${new Date().toLocaleDateString('pt-BR')}_`, ''];
+
+  if (previsao) {
+    linhas.push('## Previsão do mês em andamento');
     if (previsao.confiavel) {
       linhas.push(
-        `- Receita registrada até hoje (dia ${previsao.dia_hoje}): ${formatarReal(previsao.receita_registrada)}`,
+        `- Receita registrada até hoje (dia ${previsao.dia_hoje} de ${previsao.dias_uteis_mes_alvo} dias de fim de semana/feriado no mês): ${formatarReal(previsao.receita_registrada)}`,
         `- Projeção do mês: mínimo ${formatarReal(previsao.previsao.minimo)} · médio ${formatarReal(previsao.previsao.medio)} · máximo ${formatarReal(previsao.previsao.maximo)}`,
         `- Baseado em ${previsao.meses_fechados} mês(es) fechado(s)${previsao.ajuste_clima_ativo ? ', com ajuste por clima' : ''}.`,
+        '',
       );
     } else {
-      linhas.push(`- Histórico insuficiente pra previsão confiável (${previsao.meses_fechados} mês(es) fechado(s), mínimo 3).`);
+      linhas.push(`- Histórico insuficiente pra previsão confiável (${previsao.meses_fechados} mês(es) fechado(s), mínimo 3).`, '');
     }
+  }
+
+  linhas.push('## Eventos — mês a mês');
+  linhas.push('| Mês | Fotos enviadas | Fotos vendidas | Conversão | Receita total | Baixa | Média | Alta | Premium | Vídeo | Rostos |');
+  linhas.push('|---|---|---|---|---|---|---|---|---|---|---|');
+  for (const m of porMes) {
+    linhas.push(
+      `| ${formatarMes(`${m.mes}-01`)} | ${m.fotosEnviadas} | ${m.fotosVendidas} | ${formatarPct(m.taxaConversao)} | ${formatarReal(m.receitaTotal)} | ${formatarReal(m.receitaBaixa)} | ${formatarReal(m.receitaMedia)} | ${formatarReal(m.receitaAlta)} | ${formatarReal(m.receitaPremium)} | ${formatarReal(m.receitaVideo)} | ${m.rostosReconhecidos} |`,
+    );
+  }
+  linhas.push('');
+
+  const eventosPorAno = agruparEventosPorAno(porMes);
+  linhas.push('## Eventos — ano a ano');
+  linhas.push('| Ano | Fotos enviadas | Fotos vendidas | Conversão média | Receita total | Rostos reconhecidos |');
+  linhas.push('|---|---|---|---|---|---|');
+  for (const a of eventosPorAno) {
+    linhas.push(
+      `| ${a.ano} | ${a.fotosEnviadas} | ${a.fotosVendidas} | ${formatarPct(a.taxaConversao)} | ${formatarReal(a.receitaTotal)} | ${a.rostosReconhecidos} |`,
+    );
+  }
+  linhas.push('');
+
+  linhas.push('## Compradores — mês a mês');
+  linhas.push('| Mês | Transações | Únicos | Valor bruto | Ticket médio | Recompra no mês | Novos | Recorrentes |');
+  linhas.push('|---|---|---|---|---|---|---|---|');
+  for (const m of compradoresPorMes) {
+    linhas.push(
+      `| ${formatarMes(`${m.mes}-01`)} | ${m.totalTransacoes ?? '—'} | ${m.totalCompradoresUnicos ?? '—'} | ${formatarReal(m.valorBrutoTotal)} | ${formatarReal(m.ticketMedio)} | ${formatarPct(m.taxaRecompraMes)} | ${m.compradoresNovos ?? '—'} | ${m.compradoresRecorrentes ?? '—'} |`,
+    );
+  }
+  linhas.push('');
+
+  const compradoresPorAno = agruparCompradoresPorAno(compradoresPorMes);
+  linhas.push('## Compradores — ano a ano');
+  linhas.push('| Ano | Transações | Valor bruto | Ticket médio | % recorrentes no ano | Novos | Recorrentes |');
+  linhas.push('|---|---|---|---|---|---|---|');
+  for (const a of compradoresPorAno) {
+    linhas.push(
+      `| ${a.ano} | ${a.totalTransacoes} | ${formatarReal(a.valorBrutoTotal)} | ${formatarReal(a.ticketMedio)} | ${formatarPct(a.pctRecorrentes)} | ${a.novos} | ${a.recorrentes} |`,
+    );
+  }
+  linhas.push('');
+
+  linhas.push('## Distribuição de frequência de compra — por ano');
+  for (const [ano, dist] of Object.entries(frequenciaPorAno || {}).sort()) {
+    linhas.push(`- ${ano}: ${freqParaTexto(dist)}`);
   }
 
   return linhas.join('\n');
@@ -134,6 +195,7 @@ export default function AdminDashboard() {
   const [distribuicaoAno, setDistribuicaoAno] = useState(null);
   const [resumoTexto, setResumoTexto] = useState('');
   const [copiado, setCopiado] = useState(false);
+  const [gerandoResumo, setGerandoResumo] = useState(false);
 
   const mesAtualStr = new Date().toISOString().slice(0, 7);
 
@@ -155,16 +217,28 @@ export default function AdminDashboard() {
     adminApi.compradoresDoAno(ano).then((r) => setDistribuicaoAno(r.distribuicao_frequencia));
   }, [ano]);
 
-  const linhaEventosDoMes = useMemo(
-    () => dados?.porMes.find((m) => m.mes === mesSelecionado) || null,
-    [dados, mesSelecionado],
-  );
-
-  function handleGerarResumo() {
-    setResumoTexto(
-      montarResumoMarkdown({ mesSelecionado, linhaEventos: linhaEventosDoMes, snapshot: snapshotMes, previsao, mesAtualStr }),
-    );
+  // Busca a distribuição de frequência de TODOS os anos que aparecem nos
+  // dados (não só o ano selecionado no filtro acima) pra entrar no resumo completo.
+  async function handleGerarResumo() {
+    setGerandoResumo(true);
     setCopiado(false);
+    try {
+      const anos = [...new Set(dados.compradoresPorMes.map((m) => m.mes.slice(0, 4)))].sort();
+      const resultados = await Promise.all(anos.map((ano) => adminApi.compradoresDoAno(ano)));
+      const frequenciaPorAno = Object.fromEntries(anos.map((ano, i) => [ano, resultados[i].distribuicao_frequencia]));
+
+      setResumoTexto(
+        montarResumoCompleto({
+          porMes: dados.porMes,
+          compradoresPorMes: dados.compradoresPorMes,
+          previsao,
+          mesAtualStr,
+          frequenciaPorAno,
+        }),
+      );
+    } finally {
+      setGerandoResumo(false);
+    }
   }
 
   async function handleCopiar() {
@@ -363,15 +437,22 @@ export default function AdminDashboard() {
       </div>
 
       <div className="bg-white p-6 rounded-2xl border border-slate-200">
-        <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
-          Resumo mensal exportável — {mesSelecionado ? formatarMes(`${mesSelecionado}-01`) : '—'}
-        </h2>
-        <button type="button" onClick={handleGerarResumo} className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold">
-          Gerar resumo
+        <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1">Resumo completo exportável</h2>
+        <p className="text-xs text-slate-400 mb-4">
+          Mês a mês e ano a ano — eventos, compradores, previsão e distribuição de frequência de compra por ano. Pronto pra colar em
+          outra conversa.
+        </p>
+        <button
+          type="button"
+          onClick={handleGerarResumo}
+          disabled={gerandoResumo}
+          className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-60"
+        >
+          {gerandoResumo ? 'Gerando...' : 'Gerar resumo'}
         </button>
         {resumoTexto && (
           <div className="mt-4">
-            <textarea readOnly value={resumoTexto} rows={12} className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-xs" />
+            <textarea readOnly value={resumoTexto} rows={24} className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-xs" />
             <button
               type="button"
               onClick={handleCopiar}

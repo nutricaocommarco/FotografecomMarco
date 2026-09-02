@@ -36,7 +36,10 @@ async function handlerInterno(req, res) {
 
   const { data: compradores, error: erroCompradores } = await supabase
     .from('importacoes_compradores')
-    .select('mes_referencia, valor_bruto_total, ticket_medio, taxa_recompra_mes')
+    .select(
+      'mes_referencia, total_transacoes, total_compradores_unicos, valor_bruto_total, ticket_medio, ' +
+        'taxa_recompra_mes, compradores_novos, compradores_recorrentes',
+    )
     .order('mes_referencia');
   if (erroCompradores) return res.status(500).json({ error: erroCompradores.message });
 
@@ -71,9 +74,13 @@ async function handlerInterno(req, res) {
 
   const compradoresPorMes = compradores.map((c) => ({
     mes: c.mes_referencia.slice(0, 7),
+    totalTransacoes: c.total_transacoes,
+    totalCompradoresUnicos: c.total_compradores_unicos,
     valorBrutoTotal: c.valor_bruto_total,
     ticketMedio: c.ticket_medio,
     taxaRecompraMes: c.taxa_recompra_mes,
+    compradoresNovos: c.compradores_novos,
+    compradoresRecorrentes: c.compradores_recorrentes,
   }));
 
   // A previsão usa o mesmo `eventos` já buscado acima — calculada aqui em vez
