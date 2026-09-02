@@ -46,6 +46,9 @@ export default function AdminLayout() {
           <Link to="/admin/compradores" className="hover:text-red-400">
             Compradores
           </Link>
+          <Link to="/admin/dashboard" className="hover:text-red-400">
+            Dashboard
+          </Link>
         </div>
         <button onClick={handleLogout} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white">
           Sair

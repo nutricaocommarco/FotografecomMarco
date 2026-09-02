@@ -18,9 +18,9 @@ async function request(path, options = {}) {
 }
 
 export const adminApi = {
-  login: (password) => request('admin-login', { method: 'POST', body: JSON.stringify({ password }) }),
-  logout: () => request('admin-logout', { method: 'POST' }),
-  session: () => request('admin-session'),
+  login: (password) => request('admin-auth', { method: 'POST', body: JSON.stringify({ password }) }),
+  logout: () => request('admin-auth', { method: 'DELETE' }),
+  session: () => request('admin-auth'),
 
   uploadFoto: (fileBase64, fileName, contentType) =>
     request('admin-upload-foto', { method: 'POST', body: JSON.stringify({ fileBase64, fileName, contentType }) }),
@@ -45,15 +45,17 @@ export const adminApi = {
   updateEvento: (id, data) => request('admin-eventos', { method: 'PUT', body: JSON.stringify({ id, ...data }) }),
   deleteEvento: (id) => request(`admin-eventos?id=${id}`, { method: 'DELETE' }),
 
-  buscarClima: (data) => request(`admin-clima?data=${data}`),
-  backfillClima: (ano) => request('admin-clima-backfill', { method: 'POST', body: JSON.stringify({ ano }) }),
+  buscarClima: (data) => request(`admin-eventos?recurso=clima&data=${data}`),
+  backfillClima: (ano) => request('admin-eventos?recurso=clima-backfill', { method: 'POST', body: JSON.stringify({ ano }) }),
 
   importarCompradores: (csvText, arquivoNome) =>
-    request('admin-compradores-importar', { method: 'POST', body: JSON.stringify({ csvText, arquivoNome }) }),
+    request('admin-compradores', { method: 'POST', body: JSON.stringify({ csvText, arquivoNome }) }),
   listCompradores: () => request('admin-compradores'),
   compradoresDoMes: (mes) => request(`admin-compradores?mes=${mes}`),
   compradoresDoAno: (ano) => request(`admin-compradores?ano=${ano}`),
 
+  // Devolve os dados dos gráficos junto com a previsão do mês em andamento
+  // (calculada no mesmo request) — menos uma function separada, e o front só
+  // faz uma chamada em vez de duas.
   dashboard: () => request('admin-dashboard'),
-  previsao: () => request('admin-previsao'),
 };
