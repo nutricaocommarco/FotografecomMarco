@@ -75,6 +75,19 @@ function fatorClima(eventosDoMes, mediaGeralPrecipitacao) {
   return Math.max(0.3, 1 / razao);
 }
 
+// Anos mais recentes pesam mais que anos antigos — o negócio muda com o
+// tempo (base de clientes crescendo, preços diferentes etc.), então um
+// setembro de 2 anos atrás não deveria valer o mesmo que o do ano passado.
+// 0.6 por ano é um decaimento moderado: ano passado ainda pesa 60% do atual,
+// 2 anos atrás 36% — nunca chega a zero, então o "mesmo mês em anos
+// anteriores" continua contribuindo, só que com menos força quanto mais longe.
+const DECAIMENTO_POR_ANO = 0.6;
+function fatorRecencia(mes, anoAlvoNum) {
+  const anoDoMes = Number(mes.slice(0, 4));
+  const anosAtras = Math.max(0, anoAlvoNum - anoDoMes);
+  return Math.pow(DECAIMENTO_POR_ANO, anosAtras);
+}
+
 // Receita total de cada mês fechado, pra alimentar a linha de base — prefere
 // o total do Relatório de Eventos (mais preciso, por categoria); onde não
 // existir relatório de evento pra aquele mês, cai pro valor bruto do CSV de
@@ -135,6 +148,7 @@ export function calcularPrevisao(eventos, hoje = new Date(), comprasPorMes = [])
   }
 
   const mesAlvoNum = Number(mesAtualStr.slice(5, 7));
+  const anoAlvoNum = Number(mesAtualStr.slice(0, 4));
   const diasMesAlvo = diasNoMes(`${mesAtualStr}-01`);
   const diasUteisAlvo = contarDiasUteis(mesAtualStr);
 
@@ -145,6 +159,7 @@ export function calcularPrevisao(eventos, hoje = new Date(), comprasPorMes = [])
     if (total <= 0) continue;
     const mesNum = Number(mes.slice(5, 7));
     let peso = mesNum === mesAlvoNum ? 3 : 1;
+    peso *= fatorRecencia(mes, anoAlvoNum);
     if (ajusteClimaAtivo) peso *= fatorClima(evs, mediaGeralPrecipitacao);
     curvas.push({ mes, curva, peso, dias });
   }
@@ -158,6 +173,7 @@ export function calcularPrevisao(eventos, hoje = new Date(), comprasPorMes = [])
   for (const [mes, total] of totaisUnificados) {
     const mesNum = Number(mes.slice(5, 7));
     let peso = mesNum === mesAlvoNum ? 3 : 1;
+    peso *= fatorRecencia(mes, anoAlvoNum);
     const evsDoMes = fechados.get(mes);
     if (ajusteClimaAtivo && evsDoMes) peso *= fatorClima(evsDoMes, mediaGeralPrecipitacao);
     const diasUteisMes = contarDiasUteis(mes);

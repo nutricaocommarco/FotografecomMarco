@@ -196,6 +196,7 @@ export default function AdminDashboard() {
   const [resumoTexto, setResumoTexto] = useState('');
   const [copiado, setCopiado] = useState(false);
   const [gerandoResumo, setGerandoResumo] = useState(false);
+  const [anoGraficos, setAnoGraficos] = useState('');
 
   const mesAtualStr = new Date().toISOString().slice(0, 7);
 
@@ -206,6 +207,14 @@ export default function AdminDashboard() {
       if (lista.length > 0) setMesSelecionado((atual) => atual || lista[0].mes_referencia.slice(0, 7));
     });
   }, []);
+
+  // Com muitos meses de histórico os gráficos ficam poluídos — mostra só o
+  // ano mais recente por padrão (o usuário pode trocar ou ver "Todos").
+  useEffect(() => {
+    if (!dados || anoGraficos) return;
+    const anos = [...new Set(dados.porMes.map((m) => m.mes.slice(0, 4)))].sort();
+    if (anos.length) setAnoGraficos(anos[anos.length - 1]);
+  }, [dados, anoGraficos]);
 
   useEffect(() => {
     if (!mesSelecionado) return;
@@ -250,6 +259,13 @@ export default function AdminDashboard() {
   if (!dados) return <p className="text-slate-400">Carregando...</p>;
   const previsao = dados.previsao;
 
+  const anosDisponiveis = [...new Set(dados.porMes.map((m) => m.mes.slice(0, 4)))].sort();
+  const porMesFiltrado = anoGraficos === 'todos' ? dados.porMes : dados.porMes.filter((m) => m.mes.startsWith(anoGraficos));
+  const compradoresPorMesFiltrado =
+    anoGraficos === 'todos' ? dados.compradoresPorMes : dados.compradoresPorMes.filter((m) => m.mes.startsWith(anoGraficos));
+  const climaXReceitaFiltrado =
+    anoGraficos === 'todos' ? dados.climaXReceita : dados.climaXReceita.filter((c) => c.data.startsWith(anoGraficos));
+
   return (
     <div className="max-w-6xl space-y-8">
       <h1 className="text-2xl font-black uppercase italic">Dashboard</h1>
@@ -291,10 +307,37 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">Gráficos por mês</h2>
+        <div className="flex gap-1 flex-wrap">
+          {anosDisponiveis.map((a) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => setAnoGraficos(a)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                anoGraficos === a ? 'bg-red-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-red-300'
+              }`}
+            >
+              {a}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setAnoGraficos('todos')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+              anoGraficos === 'todos' ? 'bg-red-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-red-300'
+            }`}
+          >
+            Todos
+          </button>
+        </div>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6">
-        <PainelGrafico titulo="Taxa de conversão por mês (%)" vazio={dados.porMes.length === 0}>
+        <PainelGrafico titulo="Taxa de conversão por mês (%)" vazio={porMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <LineChart data={dados.porMes}>
+            <LineChart data={porMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} unit="%" />
@@ -304,9 +347,9 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="Receita por categoria (mês)" vazio={dados.porMes.length === 0}>
+        <PainelGrafico titulo="Receita por categoria (mês)" vazio={porMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <BarChart data={dados.porMes}>
+            <BarChart data={porMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
@@ -321,9 +364,9 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="Receita total por mês" vazio={dados.porMes.length === 0}>
+        <PainelGrafico titulo="Receita total por mês" vazio={porMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <BarChart data={dados.porMes}>
+            <BarChart data={porMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
@@ -333,9 +376,9 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="Rostos reconhecidos por mês" vazio={dados.porMes.length === 0}>
+        <PainelGrafico titulo="Rostos reconhecidos por mês" vazio={porMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <LineChart data={dados.porMes}>
+            <LineChart data={porMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
@@ -345,9 +388,9 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="Valor bruto total (compradores)" vazio={dados.compradoresPorMes.length === 0}>
+        <PainelGrafico titulo="Valor bruto total (compradores)" vazio={compradoresPorMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <LineChart data={dados.compradoresPorMes}>
+            <LineChart data={compradoresPorMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
@@ -357,9 +400,9 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="Ticket médio" vazio={dados.compradoresPorMes.length === 0}>
+        <PainelGrafico titulo="Ticket médio" vazio={compradoresPorMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <LineChart data={dados.compradoresPorMes}>
+            <LineChart data={compradoresPorMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
@@ -369,9 +412,9 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="% de compradores recorrentes (no mês)" vazio={dados.compradoresPorMes.length === 0}>
+        <PainelGrafico titulo="% de compradores recorrentes (no mês)" vazio={compradoresPorMesFiltrado.length === 0}>
           <ResponsiveContainer>
-            <LineChart data={dados.compradoresPorMes}>
+            <LineChart data={compradoresPorMesFiltrado}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="mes" tickFormatter={formatarMes} tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} unit="%" />
@@ -381,7 +424,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </PainelGrafico>
 
-        <PainelGrafico titulo="Clima × receita (por evento)" vazio={dados.climaXReceita.length === 0}>
+        <PainelGrafico titulo="Clima × receita (por evento)" vazio={climaXReceitaFiltrado.length === 0}>
           <ResponsiveContainer>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -401,11 +444,11 @@ export default function AdminDashboard() {
                 tickFormatter={(v) => `R$${v}`}
               />
               <Tooltip formatter={(v, name) => (name === 'Receita' ? formatarReal(v) : `${v}mm`)} />
-              <Scatter data={dados.climaXReceita} fill={VERMELHO} />
+              <Scatter data={climaXReceitaFiltrado} fill={VERMELHO} />
             </ScatterChart>
           </ResponsiveContainer>
-          {dados.climaXReceita.length > 0 && dados.climaXReceita.length < 10 && (
-            <p className="text-xs text-slate-400 mt-2">Amostra ainda pequena ({dados.climaXReceita.length} eventos) — leia com cautela.</p>
+          {climaXReceitaFiltrado.length > 0 && climaXReceitaFiltrado.length < 10 && (
+            <p className="text-xs text-slate-400 mt-2">Amostra ainda pequena ({climaXReceitaFiltrado.length} eventos) — leia com cautela.</p>
           )}
         </PainelGrafico>
       </div>
