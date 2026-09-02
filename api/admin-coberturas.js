@@ -1,5 +1,6 @@
 import { requireAuth } from './_lib/auth.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
+import { dispararRedeploy } from './_lib/deployHook.js';
 
 const BUCKET = 'coberturas-fotos';
 
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const { data, error } = await supabase.from('coberturas').insert(body).select().single();
     if (error) return res.status(500).json({ error: error.message });
+    await dispararRedeploy();
     return res.status(201).json(data);
   }
 
@@ -64,6 +66,7 @@ export default async function handler(req, res) {
 
     const { data, error } = await supabase.from('coberturas').update(updates).eq('id', id).select().single();
     if (error) return res.status(500).json({ error: error.message });
+    await dispararRedeploy();
     return res.status(200).json(data);
   }
 
@@ -76,6 +79,7 @@ export default async function handler(req, res) {
 
     const { error } = await supabase.from('coberturas').delete().eq('id', id);
     if (error) return res.status(500).json({ error: error.message });
+    await dispararRedeploy();
     return res.status(204).end();
   }
 
