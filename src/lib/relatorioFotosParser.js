@@ -117,3 +117,84 @@ export function parseRelatorioVendasPorCategoria(texto) {
 
   return eventos.sort((a, b) => a.data.localeCompare(b.data));
 }
+
+// Faz o parsing do relatório-resumo por evento do Foco Radical (uma linha por
+// evento, valor já LÍQUIDO — descontadas taxas da plataforma/maquininha,
+// cupons etc.), ex:
+//
+// 277384 - Treino NA PRAINHA 30-AGO-2026 @fotografecommarco	30/08/2026	R$ 737,30	R$ 737,30	48
+//
+// (colunas: título, data, valor bruto?, valor líquido, fotos vendidas —
+// separadas por tab; usamos a data da 2ª coluna, que já vem em DD/MM/AAAA)
+export function parseRelatorioResumoEventos(texto) {
+  if (!texto?.trim()) return [];
+
+  const eventos = [];
+  for (const linhaBruta of texto.split('\n')) {
+    const linha = linhaBruta.trim();
+    if (!linha) continue;
+
+    const partes = linha.split(/\t+/).length > 1 ? linha.split(/\t+/) : linha.split(/ {2,}/);
+    if (partes.length < 4) continue;
+
+    const dataMatch = partes[1]?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!dataMatch) continue;
+    const [, dia, mes, ano] = dataMatch;
+    const data = `${ano}-${mes}-${dia}`;
+
+    const valorLiquido = parseValorReal(partes[partes.length - 2]);
+    const fotosVendidas = parseInt(partes[partes.length - 1], 10);
+    if (!Number.isFinite(valorLiquido) || !Number.isFinite(fotosVendidas)) continue;
+
+    eventos.push({ data, valor_total_vendido: valorLiquido, fotos_vendidas_total: fotosVendidas });
+  }
+
+  return eventos.sort((a, b) => a.data.localeCompare(b.data));
+}
+
+// Faz o parsing da página "Informações do evento" do Foco Radical (colada em
+// bloco, um evento após o outro), ex:
+//
+// TREINO NA PRAINHA 30-AGO-2026 @fotografecommarco
+// ...
+// Lançamento do evento: 30/08/2026 18:00
+// Upload de Fotos
+// Fotos processadas: 1915
+// Rostos identificados: 2289
+//
+// (não depende de linhas em branco entre blocos — cada evento novo começa
+// numa linha de título contendo "@fotografecommarco")
+export function parseRelatorioInformacoesEvento(texto) {
+  if (!texto?.trim()) return [];
+
+  const blocos = [];
+  let atual = [];
+  for (const linha of texto.split('\n')) {
+    if (linha.includes('@fotografecommarco')) {
+      if (atual.length) blocos.push(atual.join('\n'));
+      atual = [linha];
+    } else {
+      atual.push(linha);
+    }
+  }
+  if (atual.length) blocos.push(atual.join('\n'));
+
+  const eventos = [];
+  for (const bloco of blocos) {
+    const dataMatch = bloco.match(/Lançamento do evento:\s*(\d{2})\/(\d{2})\/(\d{4})/i);
+    if (!dataMatch) continue;
+    const [, dia, mes, ano] = dataMatch;
+    const data = `${ano}-${mes}-${dia}`;
+
+    const fotosMatch = bloco.match(/Fotos processadas:\s*([\d.]+)/i);
+    const rostosMatch = bloco.match(/Rostos identificados:\s*([\d.]+)/i);
+
+    eventos.push({
+      data,
+      fotos_enviadas: fotosMatch ? parseInt(fotosMatch[1].replace(/\./g, ''), 10) : null,
+      rostos_reconhecidos: rostosMatch ? parseInt(rostosMatch[1].replace(/\./g, ''), 10) : null,
+    });
+  }
+
+  return eventos.sort((a, b) => a.data.localeCompare(b.data));
+}

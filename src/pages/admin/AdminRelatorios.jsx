@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/adminApi';
-import { parseRelatorioFotosPublicadas, parseRelatorioVendasPorCategoria } from '../../lib/relatorioFotosParser';
+import {
+  parseRelatorioFotosPublicadas,
+  parseRelatorioVendasPorCategoria,
+  parseRelatorioResumoEventos,
+  parseRelatorioInformacoesEvento,
+} from '../../lib/relatorioFotosParser';
 
 const CONDICOES_CLIMA = ['chuva', 'sol', 'vento', 'neblina'];
 const OPCOES_DIVULGACAO = [
@@ -108,20 +113,100 @@ function formatarDataHoraLocal(iso) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+// Um "cole aqui um relatório do Foco Radical, parseia e importa" genérico —
+// os quatro formatos de relatório (fotos publicadas, vendas por categoria,
+// resumo por evento, informações do evento) seguem o mesmo fluxo: colar,
+// parsear, conferir a prévia, importar (cria evento novo ou só atualiza os
+// campos que esse relatório específico traz, sem mexer no resto).
+function ImportadorColado({ titulo, descricao, placeholder, parseFn, mapearCampos, resumoLinha, eventos, onImportado }) {
+  const [texto, setTexto] = useState('');
+  const [parseados, setParseados] = useState([]);
+  const [importando, setImportando] = useState(false);
+  const [resultado, setResultado] = useState('');
+
+  function handleParsear() {
+    setParseados(parseFn(texto));
+    setResultado('');
+  }
+
+  async function handleImportar() {
+    setImportando(true);
+    setResultado('');
+    try {
+      let criados = 0;
+      let atualizados = 0;
+      for (const ev of parseados) {
+        const campos = mapearCampos(ev);
+        const existente = eventos.find((e) => e.data === ev.data);
+        if (existente) {
+          await adminApi.updateEvento(existente.id, campos);
+          atualizados++;
+        } else {
+          await adminApi.createEvento({ data: ev.data, foi_fotografar: true, ...campos });
+          criados++;
+        }
+      }
+      setResultado(`Pronto: ${criados} criado(s), ${atualizados} atualizado(s).`);
+      setTexto('');
+      setParseados([]);
+      onImportado();
+    } catch (err) {
+      setResultado(`Erro na importação: ${err.message}`);
+    } finally {
+      setImportando(false);
+    }
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 mb-10">
+      <h2 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-1">{titulo}</h2>
+      <p className="text-xs text-slate-400 mb-4">{descricao}</p>
+      <textarea
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        rows={6}
+        placeholder={placeholder}
+        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono text-sm"
+      />
+      <button type="button" onClick={handleParsear} className="mt-3 bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold">
+        Parsear
+      </button>
+
+      {parseados.length > 0 && (
+        <div className="mt-4 border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto space-y-1">
+          {parseados.map((ev) => (
+            <div key={ev.data} className="text-sm flex justify-between text-slate-700">
+              <span>{formatarDataLocal(ev.data)}</span>
+              <span className="text-slate-400">
+                {resumoLinha(ev)}
+                {eventos.some((e) => e.data === ev.data) ? ' · atualiza existente' : ' · novo'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {parseados.length > 0 && (
+        <button
+          type="button"
+          onClick={handleImportar}
+          disabled={importando}
+          className="mt-3 bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60"
+        >
+          {importando ? 'Importando...' : `Importar ${parseados.length} evento(s)`}
+        </button>
+      )}
+      {resultado && <p className="text-sm text-slate-600 mt-3">{resultado}</p>}
+    </div>
+  );
+}
+
 export default function AdminRelatorios() {
   const [eventos, setEventos] = useState([]);
   const [form, setForm] = useState(FORM_VAZIO);
   const [editandoId, setEditandoId] = useState(null);
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
-  const [textoRelatorio, setTextoRelatorio] = useState('');
-  const [eventosParseados, setEventosParseados] = useState([]);
-  const [importando, setImportando] = useState(false);
-  const [resultadoImport, setResultadoImport] = useState('');
-  const [textoVendas, setTextoVendas] = useState('');
-  const [vendasParseadas, setVendasParseadas] = useState([]);
-  const [importandoVendas, setImportandoVendas] = useState(false);
-  const [resultadoImportVendas, setResultadoImportVendas] = useState('');
   const [climaTocadoManualmente, setClimaTocadoManualmente] = useState(false);
   const [buscandoClima, setBuscandoClima] = useState(false);
   const [statusBackfill, setStatusBackfill] = useState('');
@@ -264,98 +349,6 @@ export default function AdminRelatorios() {
       setStatusBackfill(`Erro: ${err.message}`);
     } finally {
       setRodandoBackfill(false);
-    }
-  }
-
-  function handleParsearRelatorio() {
-    setEventosParseados(parseRelatorioFotosPublicadas(textoRelatorio));
-    setResultadoImport('');
-  }
-
-  // Só toca em fotos_enviadas/fotos_vendidas_total: se o evento já existir
-  // (mesma data), atualiza só esses dois campos sem mexer no resto do que já
-  // foi preenchido manualmente; se não existir, cria um registro novo com
-  // esses campos e o resto em branco pra completar depois.
-  async function handleImportarRelatorio() {
-    setImportando(true);
-    setResultadoImport('');
-    try {
-      let criados = 0;
-      let atualizados = 0;
-      for (const ev of eventosParseados) {
-        const existente = eventos.find((e) => e.data === ev.data);
-        if (existente) {
-          await adminApi.updateEvento(existente.id, {
-            fotos_enviadas: ev.fotos_enviadas,
-            fotos_vendidas_total: ev.fotos_vendidas_total ?? existente.fotos_vendidas_total,
-          });
-          atualizados++;
-        } else {
-          await adminApi.createEvento({
-            data: ev.data,
-            foi_fotografar: true,
-            fotos_enviadas: ev.fotos_enviadas,
-            fotos_vendidas_total: ev.fotos_vendidas_total,
-          });
-          criados++;
-        }
-      }
-      setResultadoImport(`Pronto: ${criados} criado(s), ${atualizados} atualizado(s).`);
-      setTextoRelatorio('');
-      setEventosParseados([]);
-      carregar();
-    } catch (err) {
-      setResultadoImport(`Erro na importação: ${err.message}`);
-    } finally {
-      setImportando(false);
-    }
-  }
-
-  function handleParsearVendas() {
-    setVendasParseadas(parseRelatorioVendasPorCategoria(textoVendas));
-    setResultadoImportVendas('');
-  }
-
-  // Mesma lógica de criar-ou-atualizar-só-esses-campos do relatório de fotos
-  // publicadas, só que preenchendo as vendas por categoria + os totais.
-  async function handleImportarVendas() {
-    setImportandoVendas(true);
-    setResultadoImportVendas('');
-    try {
-      let criados = 0;
-      let atualizados = 0;
-      for (const ev of vendasParseadas) {
-        const camposVendas = {
-          vendas_baixa_qtd: ev.vendas.baixa?.qtd ?? null,
-          vendas_baixa_valor: ev.vendas.baixa?.valor ?? null,
-          vendas_media_qtd: ev.vendas.media?.qtd ?? null,
-          vendas_media_valor: ev.vendas.media?.valor ?? null,
-          vendas_alta_qtd: ev.vendas.alta?.qtd ?? null,
-          vendas_alta_valor: ev.vendas.alta?.valor ?? null,
-          vendas_premium_qtd: ev.vendas.premium?.qtd ?? null,
-          vendas_premium_valor: ev.vendas.premium?.valor ?? null,
-          vendas_video_qtd: ev.vendas.video?.qtd ?? null,
-          vendas_video_valor: ev.vendas.video?.valor ?? null,
-          fotos_vendidas_total: ev.fotos_vendidas_total,
-          valor_total_vendido: ev.valor_total_vendido,
-        };
-        const existente = eventos.find((e) => e.data === ev.data);
-        if (existente) {
-          await adminApi.updateEvento(existente.id, camposVendas);
-          atualizados++;
-        } else {
-          await adminApi.createEvento({ data: ev.data, foi_fotografar: true, ...camposVendas });
-          criados++;
-        }
-      }
-      setResultadoImportVendas(`Pronto: ${criados} criado(s), ${atualizados} atualizado(s).`);
-      setTextoVendas('');
-      setVendasParseadas([]);
-      carregar();
-    } catch (err) {
-      setResultadoImportVendas(`Erro na importação: ${err.message}`);
-    } finally {
-      setImportandoVendas(false);
     }
   }
 
@@ -605,97 +598,62 @@ export default function AdminRelatorios() {
         )}
       </form>
 
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 mb-10">
-        <h2 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-1">Importar relatório de fotos publicadas</h2>
-        <p className="text-xs text-slate-400 mb-4">
-          Cole aqui o relatório do Foco Radical (título, data, total de fotos e, opcionalmente, fotos já vendidas). Eventos com data
-          já existente só têm esses dois campos atualizados — o resto do que já foi preenchido não é mexido.
-        </p>
-        <textarea
-          value={textoRelatorio}
-          onChange={(e) => setTextoRelatorio(e.target.value)}
-          rows={6}
-          placeholder={'TREINO PRAINHA 01-AGO-2026 @fotografecommarco\n01 AGO 2026TreinoRio De Janeiro / RJ\n2.147\nDisponível até 01/02/2027\n...'}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono text-sm"
-        />
-        <button
-          type="button"
-          onClick={handleParsearRelatorio}
-          className="mt-3 bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold"
-        >
-          Parsear
-        </button>
+      <ImportadorColado
+        titulo="Importar relatório de fotos publicadas"
+        descricao='Cole aqui o relatório do Foco Radical (título, data, total de fotos e, opcionalmente, fotos já vendidas). Eventos com data já existente só têm esses dois campos atualizados — o resto do que já foi preenchido não é mexido.'
+        placeholder={'TREINO PRAINHA 01-AGO-2026 @fotografecommarco\n01 AGO 2026TreinoRio De Janeiro / RJ\n2.147\nDisponível até 01/02/2027\n...'}
+        parseFn={parseRelatorioFotosPublicadas}
+        mapearCampos={(ev) => ({ fotos_enviadas: ev.fotos_enviadas, fotos_vendidas_total: ev.fotos_vendidas_total })}
+        resumoLinha={(ev) => `${ev.fotos_enviadas} enviadas${ev.fotos_vendidas_total != null ? ` · ${ev.fotos_vendidas_total} vendidas` : ''}`}
+        eventos={eventos}
+        onImportado={carregar}
+      />
 
-        {eventosParseados.length > 0 && (
-          <div className="mt-4 border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto space-y-1">
-            {eventosParseados.map((ev) => (
-              <div key={ev.data} className="text-sm flex justify-between text-slate-700">
-                <span>{formatarDataLocal(ev.data)}</span>
-                <span className="text-slate-400">
-                  {ev.fotos_enviadas} enviadas{ev.fotos_vendidas_total != null ? ` · ${ev.fotos_vendidas_total} vendidas` : ''}
-                  {eventos.some((e) => e.data === ev.data) ? ' · atualiza existente' : ' · novo'}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+      <ImportadorColado
+        titulo="Importar vendas por categoria"
+        descricao="Cole aqui o relatório de vendas por categoria do Foco Radical (Premium/Alta/Média/Baixa/Vídeo, quantidade e valor). Preenche as vendas por categoria e os totais do evento, sem mexer no resto."
+        placeholder={'277384 - Treino NA PRAINHA 30-AGO-2026 @fotografecommarco\nPremium 4500 Pixels\t23\tR$ 453,72\tR$ 0,00\tSim\n...'}
+        parseFn={parseRelatorioVendasPorCategoria}
+        mapearCampos={(ev) => ({
+          vendas_baixa_qtd: ev.vendas.baixa?.qtd ?? null,
+          vendas_baixa_valor: ev.vendas.baixa?.valor ?? null,
+          vendas_media_qtd: ev.vendas.media?.qtd ?? null,
+          vendas_media_valor: ev.vendas.media?.valor ?? null,
+          vendas_alta_qtd: ev.vendas.alta?.qtd ?? null,
+          vendas_alta_valor: ev.vendas.alta?.valor ?? null,
+          vendas_premium_qtd: ev.vendas.premium?.qtd ?? null,
+          vendas_premium_valor: ev.vendas.premium?.valor ?? null,
+          vendas_video_qtd: ev.vendas.video?.qtd ?? null,
+          vendas_video_valor: ev.vendas.video?.valor ?? null,
+          fotos_vendidas_total: ev.fotos_vendidas_total,
+          valor_total_vendido: ev.valor_total_vendido,
+        })}
+        resumoLinha={(ev) => `${ev.fotos_vendidas_total} vendidas · R$ ${ev.valor_total_vendido.toFixed(2)}`}
+        eventos={eventos}
+        onImportado={carregar}
+      />
 
-        {eventosParseados.length > 0 && (
-          <button
-            type="button"
-            onClick={handleImportarRelatorio}
-            disabled={importando}
-            className="mt-3 bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60"
-          >
-            {importando ? 'Importando...' : `Importar ${eventosParseados.length} evento(s)`}
-          </button>
-        )}
-        {resultadoImport && <p className="text-sm text-slate-600 mt-3">{resultadoImport}</p>}
-      </div>
+      <ImportadorColado
+        titulo="Importar resumo por evento (valor líquido)"
+        descricao="Cole aqui a lista-resumo do Foco Radical (uma linha por evento, já com o valor líquido recebido e o total de fotos vendidas). Sobrescreve valor total vendido e fotos vendidas — é a fonte mais confiável pra esses dois campos, já que o valor já vem descontado de taxas."
+        placeholder={'277384 - Treino NA PRAINHA 30-AGO-2026 @fotografecommarco\t30/08/2026\tR$ 737,30\tR$ 737,30\t48\n...'}
+        parseFn={parseRelatorioResumoEventos}
+        mapearCampos={(ev) => ({ valor_total_vendido: ev.valor_total_vendido, fotos_vendidas_total: ev.fotos_vendidas_total })}
+        resumoLinha={(ev) => `${ev.fotos_vendidas_total} vendidas · R$ ${ev.valor_total_vendido.toFixed(2)} líquido`}
+        eventos={eventos}
+        onImportado={carregar}
+      />
 
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 mb-10">
-        <h2 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-1">Importar vendas por categoria</h2>
-        <p className="text-xs text-slate-400 mb-4">
-          Cole aqui o relatório de vendas por categoria do Foco Radical (Premium/Alta/Média/Baixa, quantidade e valor). Preenche as
-          vendas por categoria e os totais do evento, sem mexer no resto.
-        </p>
-        <textarea
-          value={textoVendas}
-          onChange={(e) => setTextoVendas(e.target.value)}
-          rows={6}
-          placeholder={'277384 - Treino NA PRAINHA 30-AGO-2026 @fotografecommarco\nPremium 4500 Pixels\t23\tR$ 453,72\tR$ 0,00\tSim\n...'}
-          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 font-mono text-sm"
-        />
-        <button type="button" onClick={handleParsearVendas} className="mt-3 bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold">
-          Parsear
-        </button>
-
-        {vendasParseadas.length > 0 && (
-          <div className="mt-4 border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto space-y-1">
-            {vendasParseadas.map((ev) => (
-              <div key={ev.data} className="text-sm flex justify-between text-slate-700">
-                <span>{formatarDataLocal(ev.data)}</span>
-                <span className="text-slate-400">
-                  {ev.fotos_vendidas_total} vendidas · R$ {ev.valor_total_vendido.toFixed(2)}
-                  {eventos.some((e) => e.data === ev.data) ? ' · atualiza existente' : ' · novo'}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {vendasParseadas.length > 0 && (
-          <button
-            type="button"
-            onClick={handleImportarVendas}
-            disabled={importandoVendas}
-            className="mt-3 bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60"
-          >
-            {importandoVendas ? 'Importando...' : `Importar ${vendasParseadas.length} evento(s)`}
-          </button>
-        )}
-        {resultadoImportVendas && <p className="text-sm text-slate-600 mt-3">{resultadoImportVendas}</p>}
-      </div>
+      <ImportadorColado
+        titulo="Importar informações do evento (rostos reconhecidos)"
+        descricao='Cole aqui a página "Informações do evento" do Foco Radical (pode colar vários eventos seguidos). Preenche fotos enviadas e rostos reconhecidos, sem mexer no resto.'
+        placeholder={'TREINO NA PRAINHA 30-AGO-2026 @fotografecommarco\n...\nLançamento do evento: 30/08/2026 18:00\nFotos processadas: 1915\nRostos identificados: 2289\n...'}
+        parseFn={parseRelatorioInformacoesEvento}
+        mapearCampos={(ev) => ({ fotos_enviadas: ev.fotos_enviadas, rostos_reconhecidos: ev.rostos_reconhecidos })}
+        resumoLinha={(ev) => `${ev.fotos_enviadas ?? '—'} enviadas · ${ev.rostos_reconhecidos ?? '—'} rostos`}
+        eventos={eventos}
+        onImportado={carregar}
+      />
 
       <div className="space-y-3">
         {eventos.map((ev) => {
