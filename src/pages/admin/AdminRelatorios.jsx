@@ -354,18 +354,19 @@ export default function AdminRelatorios() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
         <h1 className="text-2xl font-black uppercase italic">Relatório de Eventos</h1>
-        <div className="flex items-center gap-3">
-          {statusBackfill && <span className="text-xs text-slate-400">{statusBackfill}</span>}
+        <div className="flex flex-col items-end gap-1">
           <button
             type="button"
             onClick={handleBackfillClima}
             disabled={rodandoBackfill}
-            className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-700 disabled:opacity-60"
+            title="Busca o clima histórico (Open-Meteo) dos últimos 6 anos e guarda em cache — não precisa rodar de novo, é só pra ter dado retroativo disponível."
+            className="whitespace-nowrap text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-700 disabled:opacity-60"
           >
-            {rodandoBackfill ? 'Buscando clima histórico...' : 'Popular clima histórico (últimos 6 anos)'}
+            {rodandoBackfill ? 'Buscando clima histórico...' : 'Popular clima histórico'}
           </button>
+          {statusBackfill && <span className="text-xs text-slate-400">{statusBackfill}</span>}
         </div>
       </div>
 
