@@ -1,6 +1,7 @@
 import { requireAuth } from './_lib/auth.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
 import { buscarClimaHistorico } from './_lib/climaOpenMeteo.js';
+import { preencherClimaSeVazio } from './_lib/climaAuto.js';
 
 // O clima (busca pontual + backfill) mora aqui, via ?recurso=, em vez de em
 // arquivos próprios — a Vercel Hobby limita a 12 Serverless Functions por
@@ -66,7 +67,9 @@ async function handlerInterno(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { data, error } = await supabase.from('relatorio_eventos').insert(req.body || {}).select().single();
+    let payload = req.body || {};
+    payload = await preencherClimaSeVazio(supabase, payload.data, payload, null);
+    const { data, error } = await supabase.from('relatorio_eventos').insert(payload).select().single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);
   }
@@ -75,7 +78,19 @@ async function handlerInterno(req, res) {
     const { id, ...updates } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id é obrigatório' });
     updates.updated_at = new Date().toISOString();
-    const { data, error } = await supabase.from('relatorio_eventos').update(updates).eq('id', id).select().single();
+
+    // Preenche clima automaticamente se ainda não tiver (nem no que está sendo
+    // enviado agora, nem no que já estava salvo) — cobre eventos criados por
+    // qualquer um dos importadores colados, que nunca passam pelo formulário.
+    const { data: existente } = await supabase
+      .from('relatorio_eventos')
+      .select('data, clima_fonte, clima_condicoes, clima_temperatura_max')
+      .eq('id', id)
+      .maybeSingle();
+    const dataDoEvento = updates.data || existente?.data;
+    const payload = await preencherClimaSeVazio(supabase, dataDoEvento, updates, existente);
+
+    const { data, error } = await supabase.from('relatorio_eventos').update(payload).eq('id', id).select().single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json(data);
   }
