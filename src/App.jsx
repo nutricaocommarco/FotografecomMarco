@@ -17,6 +17,8 @@ const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminCoberturas = lazy(() => import('./pages/admin/AdminCoberturas'));
 const AdminEmBreve = lazy(() => import('./pages/admin/AdminEmBreve'));
 const AdminProgresso = lazy(() => import('./pages/admin/AdminProgresso'));
+const AdminRelatorios = lazy(() => import('./pages/admin/AdminRelatorios'));
+const AdminCompradores = lazy(() => import('./pages/admin/AdminCompradores'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -63,6 +65,8 @@ export default function App() {
               <Route path="coberturas" element={<AdminCoberturas />} />
               <Route path="em-breve" element={<AdminEmBreve />} />
               <Route path="progresso" element={<AdminProgresso />} />
+              <Route path="relatorios" element={<AdminRelatorios />} />
+              <Route path="compradores" element={<AdminCompradores />} />
               <Route index element={<AdminCoberturas />} />
             </Route>
 
