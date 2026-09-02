@@ -57,14 +57,19 @@ async function handleImportar(req, res, supabase) {
   }
   if (linhasBrutas.length === 0) return res.status(400).json({ error: 'Nenhuma linha válida encontrada no CSV' });
 
-  const linhas = linhasBrutas.map((l) => ({
-    cpf_hash: l.cpf ? hashCpf(l.cpf) : null,
-    mes_referencia: l.mes_referencia,
-    data_pagamento: l.data_pagamento,
-    valor_bruto: l.valor_bruto,
-    meio_pagamento: l.meio_pagamento,
-    codigo_servico: l.codigo_servico,
-  }));
+  let linhas;
+  try {
+    linhas = linhasBrutas.map((l) => ({
+      cpf_hash: l.cpf ? hashCpf(l.cpf) : null,
+      mes_referencia: l.mes_referencia,
+      data_pagamento: l.data_pagamento,
+      valor_bruto: l.valor_bruto,
+      meio_pagamento: l.meio_pagamento,
+      codigo_servico: l.codigo_servico,
+    }));
+  } catch (err) {
+    return res.status(500).json({ error: `Falha ao gerar hash dos CPFs: ${err.message}` });
+  }
 
   const meses = [...new Set(linhas.map((l) => l.mes_referencia))].sort();
   const porMes = {};
@@ -93,7 +98,18 @@ async function handleImportar(req, res, supabase) {
   return res.status(200).json({ meses_afetados: meses, linhas_processadas: linhas.length, por_mes: porMes });
 }
 
+// Um erro inesperado (config faltando, etc.) crashava antes com uma página
+// de erro crua da Vercel em vez de um JSON legível — esse try/catch garante
+// que o front sempre recebe um erro que dá pra mostrar pro usuário.
 export default async function handler(req, res) {
+  try {
+    return await handlerInterno(req, res);
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'Erro inesperado' });
+  }
+}
+
+async function handlerInterno(req, res) {
   if (!requireAuth(req, res)) return;
   const supabase = getSupabaseAdmin();
 
@@ -103,12 +119,8 @@ export default async function handler(req, res) {
   const { mes, ano } = req.query;
 
   if (ano) {
-    try {
-      const linhas = await buscarLinhasDoAno(supabase, ano);
-      return res.status(200).json({ ano, distribuicao_frequencia: calcularDistribuicaoFrequenciaAnual(linhas) });
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
-    }
+    const linhas = await buscarLinhasDoAno(supabase, ano);
+    return res.status(200).json({ ano, distribuicao_frequencia: calcularDistribuicaoFrequenciaAnual(linhas) });
   }
 
   if (mes) {

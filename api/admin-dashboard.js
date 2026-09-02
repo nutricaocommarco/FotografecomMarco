@@ -17,6 +17,14 @@ function linhaVaziaDoMes(mes) {
 }
 
 export default async function handler(req, res) {
+  try {
+    return await handlerInterno(req, res);
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'Erro inesperado' });
+  }
+}
+
+async function handlerInterno(req, res) {
   if (!requireAuth(req, res)) return;
   if (req.method !== 'GET') return res.status(405).json({ error: 'Método não permitido' });
 

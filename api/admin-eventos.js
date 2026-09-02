@@ -44,6 +44,14 @@ async function handleClimaBackfill(req, res, supabase) {
 }
 
 export default async function handler(req, res) {
+  try {
+    return await handlerInterno(req, res);
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'Erro inesperado' });
+  }
+}
+
+async function handlerInterno(req, res) {
   if (!requireAuth(req, res)) return;
   const supabase = getSupabaseAdmin();
   const { recurso } = req.query;
