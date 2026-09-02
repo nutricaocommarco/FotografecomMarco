@@ -128,7 +128,7 @@ function montarResumoCompleto({ porMes, compradoresPorMes, previsao, mesAtualStr
       linhas.push(
         `- Receita registrada até hoje (dia ${previsao.dia_hoje} de ${previsao.dias_uteis_mes_alvo} dias de fim de semana/feriado no mês): ${formatarReal(previsao.receita_registrada)}`,
         `- Projeção do mês: mínimo ${formatarReal(previsao.previsao.minimo)} · médio ${formatarReal(previsao.previsao.medio)} · máximo ${formatarReal(previsao.previsao.maximo)}`,
-        `- Baseado em ${previsao.meses_fechados} mês(es) fechado(s)${previsao.ajuste_clima_ativo ? ', com ajuste por clima' : ''}.`,
+        `- Baseado em ${previsao.meses_fechados} mês(es) com relatório de evento e ${previsao.meses_linha_de_base} mês(es) de histórico total (inclui CSV de compradores)${previsao.ajuste_clima_ativo ? ', com ajuste por clima' : ''}.`,
         '',
       );
     } else {
@@ -284,7 +284,8 @@ export default function AdminDashboard() {
               </div>
             </div>
             <p className="text-xs text-slate-400">
-              Baseado em {previsao.meses_fechados} mês(es) fechado(s){previsao.ajuste_clima_ativo ? ', com ajuste por clima' : ''}.
+              Baseado em {previsao.meses_fechados} mês(es) com relatório de evento e {previsao.meses_linha_de_base} mês(es) de histórico
+              total{previsao.ajuste_clima_ativo ? ', com ajuste por clima' : ''}.
             </p>
           </div>
         )}

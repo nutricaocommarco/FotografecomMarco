@@ -126,10 +126,15 @@ export function parseRelatorioVendasPorCategoria(texto) {
 //
 // (colunas: título, data, valor bruto?, valor líquido, fotos vendidas —
 // separadas por tab; usamos a data da 2ª coluna, que já vem em DD/MM/AAAA)
+//
+// Relatórios mais antigos (2024) às vezes têm DUAS linhas pra mesma data —
+// "Reconhecimento Facial" e "Galerias" separados, ou dois eventos no mesmo
+// dia em locais diferentes — nesses casos soma tudo na mesma data, já que
+// relatorio_eventos guarda um total por dia, não por evento individual.
 export function parseRelatorioResumoEventos(texto) {
   if (!texto?.trim()) return [];
 
-  const eventos = [];
+  const porData = new Map();
   for (const linhaBruta of texto.split('\n')) {
     const linha = linhaBruta.trim();
     if (!linha) continue;
@@ -146,10 +151,13 @@ export function parseRelatorioResumoEventos(texto) {
     const fotosVendidas = parseInt(partes[partes.length - 1], 10);
     if (!Number.isFinite(valorLiquido) || !Number.isFinite(fotosVendidas)) continue;
 
-    eventos.push({ data, valor_total_vendido: valorLiquido, fotos_vendidas_total: fotosVendidas });
+    const atual = porData.get(data) || { data, valor_total_vendido: 0, fotos_vendidas_total: 0 };
+    atual.valor_total_vendido += valorLiquido;
+    atual.fotos_vendidas_total += fotosVendidas;
+    porData.set(data, atual);
   }
 
-  return eventos.sort((a, b) => a.data.localeCompare(b.data));
+  return [...porData.values()].sort((a, b) => a.data.localeCompare(b.data));
 }
 
 // Faz o parsing da página "Informações do evento" do Foco Radical (colada em

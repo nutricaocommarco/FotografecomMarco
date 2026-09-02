@@ -83,11 +83,16 @@ async function handlerInterno(req, res) {
     compradoresRecorrentes: c.compradores_recorrentes,
   }));
 
-  // A previsão usa o mesmo `eventos` já buscado acima — calculada aqui em vez
-  // de numa function própria (a Vercel Hobby limita a 12 Serverless Functions
-  // por deploy), e o front ganha de brinde: uma chamada em vez de duas.
+  // A previsão usa o mesmo `eventos`/`compradores` já buscados acima —
+  // calculada aqui em vez de numa function própria (a Vercel Hobby limita a
+  // 12 Serverless Functions por deploy), e o front ganha de brinde: uma
+  // chamada em vez de duas. `compradoresPorMes` estende a linha de base da
+  // previsão com o histórico do CSV de compradores (vai bem mais longe no
+  // tempo do que o Relatório de Eventos, que só começou em 2026).
   const previsao = calcularPrevisao(
     eventos.map((e) => ({ data: e.data, valor_total_vendido: e.valor_total_vendido, clima_precipitacao_mm: e.clima_precipitacao_mm })),
+    new Date(),
+    compradoresPorMes,
   );
 
   return res.status(200).json({ porMes, climaXReceita, compradoresPorMes, previsao });

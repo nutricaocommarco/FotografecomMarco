@@ -75,28 +75,54 @@ function fatorClima(eventosDoMes, mediaGeralPrecipitacao) {
   return Math.max(0.3, 1 / razao);
 }
 
-function media(nums) {
-  return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+// Receita total de cada mês fechado, pra alimentar a linha de base — prefere
+// o total do Relatório de Eventos (mais preciso, por categoria); onde não
+// existir relatório de evento pra aquele mês, cai pro valor bruto do CSV de
+// compradores (compras_hash/importacoes_compradores), que cobre um histórico
+// bem maior (desde 2024). O mecanismo de curva (dia-a-dia) continua só com
+// relatório de evento, porque só ele tem granularidade diária.
+function totalPorMesUnificado(fechados, comprasPorMes, mesAtualStr) {
+  const totais = new Map();
+  for (const [mes, evs] of fechados) {
+    const total = evs.reduce((s, e) => s + (e.valor_total_vendido || 0), 0);
+    if (total > 0) totais.set(mes, total);
+  }
+  for (const c of comprasPorMes || []) {
+    if (c.mes >= mesAtualStr) continue;
+    if (!totais.has(c.mes) && c.valorBrutoTotal > 0) totais.set(c.mes, c.valorBrutoTotal);
+  }
+  return totais;
 }
 
 // Previsão de receita do mês em andamento a partir do histórico de meses
-// fechados. Recebe `eventos` (relatorio_eventos) e devolve { confiavel: false }
-// se não houver histórico suficiente, ou os três cenários (mínimo/médio/máximo).
+// fechados. Recebe `eventos` (relatorio_eventos) e `comprasPorMes` (resumo
+// mensal do CSV de compradores — pode ter histórico bem mais longo que os
+// relatórios de evento) e devolve { confiavel: false } se não houver
+// histórico suficiente, ou os três cenários (mínimo/médio/máximo).
 //
 // Combina duas fontes, ponderadas pelo quanto do mês já "deveria" ter
 // acontecido em termos de receita (curva média no dia de hoje):
 // 1) "Escala": receita já registrada / % típico acumulado até hoje — fica
-//    mais confiável conforme o mês avança e mais dado real existe.
+//    mais confiável conforme o mês avança e mais dado real existe. Só usa
+//    meses com relatório de evento (precisa da curva dia-a-dia).
 // 2) "Linha de base": receita histórica por dia-de-fim-de-semana-ou-feriado
 //    (normaliza meses com 4 vs. 5 fins de semana) × dias desse tipo no mês
-//    alvo — funciona mesmo no dia 1, com receita registrada zerada, porque
-//    não depende de nada ter acontecido ainda no mês atual.
-export function calcularPrevisao(eventos, hoje = new Date()) {
+//    alvo — funciona mesmo no dia 1, com receita registrada zerada. Usa todo
+//    o histórico disponível (relatório de evento + CSV de compradores), com
+//    peso maior pro mesmo mês-calendário em anos anteriores.
+export function calcularPrevisao(eventos, hoje = new Date(), comprasPorMes = []) {
   const mesAtualStr = hoje.toISOString().slice(0, 10).slice(0, 7);
   const fechados = agruparMesesFechados(eventos, mesAtualStr);
 
-  if (fechados.size < MIN_MESES_FECHADOS) {
-    return { confiavel: false, meses_fechados: fechados.size };
+  // Linha de base: usa o histórico total disponível (relatório de evento +
+  // CSV de compradores), não só os meses com relatório de evento — é aqui
+  // que anos anteriores sem relatório de evento cadastrado ainda contribuem.
+  // O gate de confiabilidade é sobre ISSO (o que realmente entra na conta),
+  // não só sobre quantos meses têm relatório de evento.
+  const totaisUnificados = totalPorMesUnificado(fechados, comprasPorMes, mesAtualStr);
+
+  if (totaisUnificados.size < MIN_MESES_FECHADOS) {
+    return { confiavel: false, meses_fechados: fechados.size, meses_linha_de_base: totaisUnificados.size };
   }
 
   const mesesComClima = [...fechados.values()].filter((evs) => evs.some((e) => e.clima_precipitacao_mm != null)).length;
@@ -113,7 +139,6 @@ export function calcularPrevisao(eventos, hoje = new Date()) {
   const diasUteisAlvo = contarDiasUteis(mesAtualStr);
 
   const curvas = [];
-  const receitasPorDiaUtil = [];
   for (const [mes, evs] of fechados) {
     const dias = diasNoMes(`${mes}-01`);
     const { curva, total } = curvaAcumulada(evs, dias);
@@ -122,13 +147,21 @@ export function calcularPrevisao(eventos, hoje = new Date()) {
     let peso = mesNum === mesAlvoNum ? 3 : 1;
     if (ajusteClimaAtivo) peso *= fatorClima(evs, mediaGeralPrecipitacao);
     curvas.push({ mes, curva, peso, dias });
-
-    const diasUteisMes = contarDiasUteis(mes);
-    if (diasUteisMes > 0) receitasPorDiaUtil.push({ valor: total / diasUteisMes, peso });
   }
 
-  if (curvas.length < MIN_MESES_FECHADOS) {
-    return { confiavel: false, meses_fechados: fechados.size };
+  // Sem early-return aqui de propósito: se `curvas` ficar curto (poucos meses
+  // com relatório de evento), o refinamento por escala degrada sozinho pra
+  // linha de base pura (curvaMedia fica 0 em todo dia => pesoEscala 0 =>
+  // `combinar()` devolve só a linha de base) — não precisa de outro gate.
+
+  const receitasPorDiaUtil = [];
+  for (const [mes, total] of totaisUnificados) {
+    const mesNum = Number(mes.slice(5, 7));
+    let peso = mesNum === mesAlvoNum ? 3 : 1;
+    const evsDoMes = fechados.get(mes);
+    if (ajusteClimaAtivo && evsDoMes) peso *= fatorClima(evsDoMes, mediaGeralPrecipitacao);
+    const diasUteisMes = contarDiasUteis(mes);
+    if (diasUteisMes > 0) receitasPorDiaUtil.push({ valor: total / diasUteisMes, peso });
   }
 
   const curvaMin = new Array(diasMesAlvo + 1).fill(null);
@@ -188,6 +221,7 @@ export function calcularPrevisao(eventos, hoje = new Date()) {
   return {
     confiavel: true,
     meses_fechados: fechados.size,
+    meses_linha_de_base: totaisUnificados.size,
     ajuste_clima_ativo: ajusteClimaAtivo,
     dia_hoje: diaHoje,
     dias_uteis_mes_alvo: diasUteisAlvo,
