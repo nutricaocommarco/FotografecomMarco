@@ -335,13 +335,13 @@ export default function AdminDashboard() {
         </PainelGrafico>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">Distribuição de frequência de compra</h2>
         <div className="flex items-center gap-3">
           <select
             value={mesSelecionado}
             onChange={(e) => setMesSelecionado(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm"
+            className="min-w-0 px-3 py-2 rounded-xl border border-slate-200 text-sm"
           >
             {meses.map((m) => (
               <option key={m.mes_referencia} value={m.mes_referencia.slice(0, 7)}>
@@ -353,7 +353,7 @@ export default function AdminDashboard() {
             type="number"
             value={ano}
             onChange={(e) => setAno(e.target.value)}
-            className="w-24 px-3 py-2 rounded-xl border border-slate-200 text-sm"
+            className="w-20 px-3 py-2 rounded-xl border border-slate-200 text-sm"
           />
         </div>
       </div>
