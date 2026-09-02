@@ -38,6 +38,8 @@ const FORM_VAZIO = {
   vendas_alta_valor: '',
   vendas_premium_qtd: '',
   vendas_premium_valor: '',
+  vendas_video_qtd: '',
+  vendas_video_valor: '',
   valor_total_vendido: '',
   divulgacao: [],
   divulgacao_obs: '',
@@ -66,6 +68,8 @@ const CAMPOS_NUMERICOS = [
   'vendas_alta_valor',
   'vendas_premium_qtd',
   'vendas_premium_valor',
+  'vendas_video_qtd',
+  'vendas_video_valor',
   'valor_total_vendido',
 ];
 
@@ -330,6 +334,8 @@ export default function AdminRelatorios() {
           vendas_alta_valor: ev.vendas.alta?.valor ?? null,
           vendas_premium_qtd: ev.vendas.premium?.qtd ?? null,
           vendas_premium_valor: ev.vendas.premium?.valor ?? null,
+          vendas_video_qtd: ev.vendas.video?.qtd ?? null,
+          vendas_video_valor: ev.vendas.video?.valor ?? null,
           fotos_vendidas_total: ev.fotos_vendidas_total,
           valor_total_vendido: ev.valor_total_vendido,
         };
@@ -513,6 +519,12 @@ export default function AdminRelatorios() {
             label="Premium — valor"
             value={form.vendas_premium_valor}
             onChange={(v) => setForm({ ...form, vendas_premium_valor: v })}
+          />
+          <CampoNumero label="Vídeo — qtd" value={form.vendas_video_qtd} onChange={(v) => setForm({ ...form, vendas_video_qtd: v })} />
+          <CampoNumero
+            label="Vídeo — valor"
+            value={form.vendas_video_valor}
+            onChange={(v) => setForm({ ...form, vendas_video_valor: v })}
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">

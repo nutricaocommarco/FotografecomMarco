@@ -17,7 +17,13 @@ import { adminApi } from '../../lib/adminApi';
 
 const VERMELHO = '#b91c1c';
 const CINZA = '#64748b';
-const CORES_CATEGORIA = { receitaBaixa: '#cbd5e1', receitaMedia: '#94a3b8', receitaAlta: '#ef4444', receitaPremium: '#b91c1c' };
+const CORES_CATEGORIA = {
+  receitaBaixa: '#cbd5e1',
+  receitaMedia: '#94a3b8',
+  receitaAlta: '#ef4444',
+  receitaPremium: '#b91c1c',
+  receitaVideo: '#0f172a',
+};
 
 function formatarMes(mesReferencia) {
   const [ano, mes] = mesReferencia.split('-');
@@ -75,7 +81,7 @@ function montarResumoMarkdown({ mesSelecionado, linhaEventos, snapshot, previsao
       `- Fotos vendidas: ${linhaEventos.fotosVendidas}`,
       `- Taxa de conversão: ${linhaEventos.taxaConversao != null ? linhaEventos.taxaConversao.toFixed(1) + '%' : '—'}`,
       `- Receita total: ${formatarReal(linhaEventos.receitaTotal)}`,
-      `- Receita por categoria: Baixa ${formatarReal(linhaEventos.receitaBaixa)} · Média ${formatarReal(linhaEventos.receitaMedia)} · Alta ${formatarReal(linhaEventos.receitaAlta)} · Premium ${formatarReal(linhaEventos.receitaPremium)}`,
+      `- Receita por categoria: Baixa ${formatarReal(linhaEventos.receitaBaixa)} · Média ${formatarReal(linhaEventos.receitaMedia)} · Alta ${formatarReal(linhaEventos.receitaAlta)} · Premium ${formatarReal(linhaEventos.receitaPremium)} · Vídeo ${formatarReal(linhaEventos.receitaVideo)}`,
       `- Rostos reconhecidos: ${linhaEventos.rostosReconhecidos}`,
       '',
     );
@@ -234,7 +240,8 @@ export default function AdminDashboard() {
               <Bar dataKey="receitaBaixa" name="Baixa" stackId="a" fill={CORES_CATEGORIA.receitaBaixa} />
               <Bar dataKey="receitaMedia" name="Média" stackId="a" fill={CORES_CATEGORIA.receitaMedia} />
               <Bar dataKey="receitaAlta" name="Alta" stackId="a" fill={CORES_CATEGORIA.receitaAlta} />
-              <Bar dataKey="receitaPremium" name="Premium" stackId="a" fill={CORES_CATEGORIA.receitaPremium} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="receitaPremium" name="Premium" stackId="a" fill={CORES_CATEGORIA.receitaPremium} />
+              <Bar dataKey="receitaVideo" name="Vídeo" stackId="a" fill={CORES_CATEGORIA.receitaVideo} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </PainelGrafico>

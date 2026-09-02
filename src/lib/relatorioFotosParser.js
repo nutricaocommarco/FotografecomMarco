@@ -51,6 +51,7 @@ const CATEGORIAS_VENDAS = [
   { chave: 'alta', prefixo: 'alta' },
   { chave: 'media', prefixo: 'média' },
   { chave: 'baixa', prefixo: 'baixa' },
+  { chave: 'video', prefixo: 'vídeo' },
 ];
 
 function parseValorReal(str) {
@@ -89,19 +90,27 @@ export function parseRelatorioVendasPorCategoria(texto) {
     const ano = dataMatch[3];
     const data = `${ano}-${mes}-${dia}`;
 
-    const vendas = {};
+    // Guarda toda linha reconhecível (qtd + valor), mesmo que a categoria não
+    // seja uma das conhecidas — assim um tipo de produto novo (ex: um pacote
+    // diferente que o Foco Radical passe a oferecer) nunca some do total,
+    // só fica de fora da quebra por categoria até eu adicionar um mapeamento pra ele.
+    const linhasReconhecidas = [];
     for (const linha of linhas.slice(1)) {
       const partes = linha.split(/\t+/).length > 1 ? linha.split(/\t+/) : linha.split(/ {2,}/);
       if (partes.length < 3) continue;
       const [nomeCategoria, qtdStr, valorStr] = partes;
-      const categoria = CATEGORIAS_VENDAS.find((c) => nomeCategoria.toLowerCase().startsWith(c.prefixo));
-      if (!categoria) continue;
-      vendas[categoria.chave] = { qtd: parseInt(qtdStr, 10) || 0, valor: parseValorReal(valorStr) };
+      linhasReconhecidas.push({ nomeCategoria, qtd: parseInt(qtdStr, 10) || 0, valor: parseValorReal(valorStr) });
     }
-    if (Object.keys(vendas).length === 0) continue;
+    if (linhasReconhecidas.length === 0) continue;
 
-    const fotosVendidasTotal = Object.values(vendas).reduce((s, v) => s + v.qtd, 0);
-    const valorTotalVendido = Object.values(vendas).reduce((s, v) => s + v.valor, 0);
+    const vendas = {};
+    for (const l of linhasReconhecidas) {
+      const categoria = CATEGORIAS_VENDAS.find((c) => l.nomeCategoria.toLowerCase().startsWith(c.prefixo));
+      if (categoria) vendas[categoria.chave] = { qtd: l.qtd, valor: l.valor };
+    }
+
+    const fotosVendidasTotal = linhasReconhecidas.reduce((s, l) => s + l.qtd, 0);
+    const valorTotalVendido = linhasReconhecidas.reduce((s, l) => s + l.valor, 0);
 
     eventos.push({ data, vendas, fotos_vendidas_total: fotosVendidasTotal, valor_total_vendido: valorTotalVendido });
   }

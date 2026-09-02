@@ -11,6 +11,7 @@ function linhaVaziaDoMes(mes) {
     receitaMedia: 0,
     receitaAlta: 0,
     receitaPremium: 0,
+    receitaVideo: 0,
     receitaTotal: 0,
     rostosReconhecidos: 0,
   };
@@ -50,6 +51,7 @@ async function handlerInterno(req, res) {
     r.receitaMedia += ev.vendas_media_valor || 0;
     r.receitaAlta += ev.vendas_alta_valor || 0;
     r.receitaPremium += ev.vendas_premium_valor || 0;
+    r.receitaVideo += ev.vendas_video_valor || 0;
     r.receitaTotal += ev.valor_total_vendido || 0;
     r.rostosReconhecidos += ev.rostos_reconhecidos || 0;
   }

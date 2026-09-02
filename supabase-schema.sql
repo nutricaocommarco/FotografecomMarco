@@ -100,6 +100,8 @@ create table relatorio_eventos (
   vendas_alta_valor numeric,
   vendas_premium_qtd int,
   vendas_premium_valor numeric,
+  vendas_video_qtd int,
+  vendas_video_valor numeric,
   valor_total_vendido numeric,
   divulgacao text[] default '{}', -- nenhuma | stories | post | grupo_whatsapp | outro
   divulgacao_obs text,
