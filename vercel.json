@@ -4,6 +4,7 @@
   "redirects": [
     { "source": "/pagamento-confirmado", "destination": "/", "permanent": true },
     { "source": "/blogs", "destination": "/blog", "permanent": true },
+    { "source": "/historia-da-prainha", "destination": "/historia-da-prainha-no-recreio-dos-bandeirantes", "permanent": true },
     { "source": "/treino-de-ciclistas-e-corredores", "destination": "/", "permanent": true },
     { "source": "/acessoria-atleta-moderno", "destination": "/", "permanent": true },
     { "source": "/fotos-de-apartamentos", "destination": "/", "permanent": true },
