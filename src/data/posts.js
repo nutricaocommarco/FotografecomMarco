@@ -3,7 +3,7 @@
 export const posts = [
   // --- Fotografia ---
   { slug: 'fotografo-na-prainha', category: 'fotografia', title: 'Fotógrafo na Prainha: Como Encontrar Suas Fotos de Treino', date: '2026-08-31' },
-  { slug: 'historia-da-prainha', category: 'fotografia', title: 'A História da Prainha', date: '2026-09-04' },
+  { slug: 'historia-da-prainha', category: 'fotografia', title: 'A História da Prainha no Recreio dos Bandeirantes', date: '2026-09-04' },
   { slug: 'qual-tamanho-de-imagem-escolher', oldPath: '/2020/11/11/qual-tamanho-de-imagem-escolher/', category: 'fotografia', title: 'Qual Tamanho de Imagem Escolher?', date: '2020-11-11' },
   { slug: 'como-sair-bem-na-foto', oldPath: '/2020/11/09/como-sair-bem-na-foto/', category: 'fotografia', title: 'Como Sair Bem na Foto?', date: '2020-11-09' },
   { slug: 'validade-da-camera', oldPath: '/2020/11/06/validade-da-camera/', category: 'fotografia', title: 'Validade da Câmera', date: '2020-11-06' },
