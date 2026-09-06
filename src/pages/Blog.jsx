@@ -14,10 +14,14 @@ export default function Blog() {
         <meta name="description" content="Dicas de fotografia e de ciclismo pra quem treina e pra quem fotografa." />
       </Helmet>
 
-      <section className="py-24 container mx-auto px-6 max-w-5xl">
-        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Blog</h1>
-        <div className="w-20 h-2 bg-red-700 rounded-full mb-12"></div>
+      <header className="relative pt-24 pb-12 overflow-hidden bg-gradient-to-b from-red-50 to-white">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Blog</h1>
+          <div className="w-20 h-2 bg-red-700 rounded-full"></div>
+        </div>
+      </header>
 
+      <section className="pb-24 container mx-auto px-6 max-w-5xl">
         <div className="grid md:grid-cols-2 gap-8">
           {ordenados.map((post) => {
             const content = postsContent[post.slug];

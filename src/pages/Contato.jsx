@@ -37,11 +37,15 @@ export default function Contato() {
         <meta name="description" content="Fale com o Marco: dúvidas sobre fotos, coberturas ou parcerias." />
       </Helmet>
 
-      <section className="py-24 container mx-auto px-6 max-w-xl">
-        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Contato</h1>
-        <div className="w-20 h-2 bg-red-700 rounded-full mb-8"></div>
-        <p className="text-slate-600 font-medium mb-10">Não achou sua foto ou tem alguma dúvida? Me manda uma mensagem.</p>
+      <header className="relative pt-24 pb-12 overflow-hidden bg-gradient-to-b from-red-50 to-white">
+        <div className="container mx-auto px-6 max-w-xl">
+          <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Contato</h1>
+          <div className="w-20 h-2 bg-red-700 rounded-full mb-8"></div>
+          <p className="text-slate-600 font-medium">Não achou sua foto ou tem alguma dúvida? Me manda uma mensagem.</p>
+        </div>
+      </header>
 
+      <section className="pb-24 container mx-auto px-6 max-w-xl">
         {status === 'done' ? (
           <p className="text-green-700 font-bold text-lg">Mensagem enviada! Te respondo em breve.</p>
         ) : (

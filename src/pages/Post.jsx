@@ -29,15 +29,17 @@ export default function Post() {
         <meta name="description" content={content?.metaDescription || post.title} />
       </Helmet>
 
-      <article className="py-24 container mx-auto px-6 max-w-3xl">
-        <Link to="/blog" className="text-sm font-bold text-red-700 uppercase tracking-widest">
-          ← Blog
-        </Link>
-        <h1 className="text-3xl md:text-4xl font-black text-slate-900 uppercase italic mt-4 mb-4">{post.title}</h1>
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">
-          {formatarDataLocal(post.date)}
-        </p>
+      <header className="relative pt-24 pb-10 overflow-hidden bg-gradient-to-b from-red-50 to-white">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <Link to="/blog" className="text-sm font-bold text-red-700 uppercase tracking-widest">
+            ← Blog
+          </Link>
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 uppercase italic mt-4 mb-4">{post.title}</h1>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{formatarDataLocal(post.date)}</p>
+        </div>
+      </header>
 
+      <article className="pb-24 container mx-auto px-6 max-w-3xl">
         {content?.coverImage && (
           <img src={content.coverImage} alt={post.title} className="w-full rounded-[2rem] mb-10 object-cover" />
         )}

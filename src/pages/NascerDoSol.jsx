@@ -34,23 +34,27 @@ export default function NascerDoSol() {
         />
       </Helmet>
 
-      <section className="py-24 container mx-auto px-6 max-w-6xl">
-        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Nascer do Sol na Prainha</h1>
-        <div className="w-20 h-2 bg-red-700 rounded-full mb-6"></div>
-        <p className="text-slate-600 font-medium max-w-2xl mb-3">
-          A Prainha, no Recreio dos Bandeirantes, tem um dos nascer do sol mais bonitos do Rio de Janeiro — e ao longo
-          dos anos fotografando os treinos por lá, fui guardando os melhores registros do amanhecer. Reuni aqui o
-          acervo, organizado por data. Todas as fotos estão disponíveis pra você ver e baixar gratuitamente, em boa
-          resolução.
-        </p>
-        <p className="text-slate-500 text-sm mb-12">
-          Procurando fotos do seu treino na Prainha?{' '}
-          <a href="/coberturas" className="text-red-700 underline">
-            Veja as Coberturas
-          </a>
-          .
-        </p>
+      <header className="relative pt-24 pb-12 overflow-hidden bg-gradient-to-b from-red-50 to-white">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Nascer do Sol na Prainha</h1>
+          <div className="w-20 h-2 bg-red-700 rounded-full mb-6"></div>
+          <p className="text-slate-600 font-medium max-w-2xl mb-3">
+            A Prainha, no Recreio dos Bandeirantes, tem um dos nascer do sol mais bonitos do Rio de Janeiro — e ao longo
+            dos anos fotografando os treinos por lá, fui guardando os melhores registros do amanhecer. Reuni aqui o
+            acervo, organizado por data. Todas as fotos estão disponíveis pra você ver e baixar gratuitamente, em boa
+            resolução.
+          </p>
+          <p className="text-slate-500 text-sm">
+            Procurando fotos do seu treino na Prainha?{' '}
+            <a href="/coberturas" className="text-red-700 underline">
+              Veja as Coberturas
+            </a>
+            .
+          </p>
+        </div>
+      </header>
 
+      <section className="pb-24 container mx-auto px-6 max-w-6xl">
         <div className="bg-slate-50 rounded-[2rem] p-6 md:p-10 mb-16 grid md:grid-cols-2 gap-8 items-center">
           <img
             src="/prainha-historica-1972.jpg"

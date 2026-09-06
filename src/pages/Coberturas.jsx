@@ -168,21 +168,25 @@ export default function Coberturas() {
         />
       </Helmet>
 
-      <section className="py-24 container mx-auto px-6 max-w-6xl">
-        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Coberturas na Prainha</h1>
-        <div className="w-20 h-2 bg-red-700 rounded-full mb-6"></div>
-        <p className="text-slate-600 font-medium max-w-2xl mb-2">
-          Acesse as coberturas fotográficas dos treinos na Prainha e escolha sua foto! Você será redirecionado ao site
-          da Foco Radical, onde vendemos nossas imagens.
-        </p>
-        <p className="text-slate-500 text-sm mb-12">
-          Não achou sua foto?{' '}
-          <a href="/contato" className="text-red-700 underline">
-            Fale comigo
-          </a>{' '}
-          que te ajudo.
-        </p>
+      <header className="relative pt-24 pb-12 overflow-hidden bg-gradient-to-b from-red-50 to-white">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-4">Coberturas na Prainha</h1>
+          <div className="w-20 h-2 bg-red-700 rounded-full mb-6"></div>
+          <p className="text-slate-600 font-medium max-w-2xl mb-2">
+            Acesse as coberturas fotográficas dos treinos na Prainha e escolha sua foto! Você será redirecionado ao site
+            da Foco Radical, onde vendemos nossas imagens.
+          </p>
+          <p className="text-slate-500 text-sm">
+            Não achou sua foto?{' '}
+            <a href="/contato" className="text-red-700 underline">
+              Fale comigo
+            </a>{' '}
+            que te ajudo.
+          </p>
+        </div>
+      </header>
 
+      <section className="pb-24 container mx-auto px-6 max-w-6xl">
         {loadingExtra ? (
           <SkeletonBloco altura={350} />
         ) : (

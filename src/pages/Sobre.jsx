@@ -9,9 +9,14 @@ export default function Sobre() {
         <meta name="description" content="Conheça Marco Aurélio, fotógrafo esportivo na Prainha (Rio de Janeiro), especializado em fotografar treinos de bike, corrida e caminhada." />
       </Helmet>
 
-      <section className="py-24 container mx-auto px-6 max-w-3xl">
-        <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-8">Sobre Mim</h1>
-        <div className="w-20 h-2 bg-red-700 rounded-full mb-8"></div>
+      <header className="relative pt-24 pb-12 overflow-hidden bg-gradient-to-b from-red-50 to-white">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <h1 className="text-4xl font-black text-slate-900 uppercase italic mb-8">Sobre Mim</h1>
+          <div className="w-20 h-2 bg-red-700 rounded-full"></div>
+        </div>
+      </header>
+
+      <section className="pb-24 container mx-auto px-6 max-w-3xl">
         <p className="text-lg text-slate-600 leading-relaxed font-medium mb-6">
           Sou o Marco, fotógrafo esportivo apaixonado por capturar o esforço e a alegria de quem treina na Prainha e em
           outros pontos do Rio de Janeiro. Toda semana estou lá com a câmera, registrando ciclistas, corredores e
