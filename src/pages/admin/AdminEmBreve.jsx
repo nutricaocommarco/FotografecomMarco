@@ -6,6 +6,7 @@ const FORM_VAZIO = { evento: '', data_evento: '', previsao_horario: '', obs: '' 
 export default function AdminEmBreve() {
   const [avisos, setAvisos] = useState([]);
   const [form, setForm] = useState(FORM_VAZIO);
+  const [editandoId, setEditandoId] = useState(null);
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
@@ -15,19 +16,47 @@ export default function AdminEmBreve() {
 
   useEffect(carregar, []);
 
-  async function handleCriar(e) {
+  async function handleSalvar(e) {
     e.preventDefault();
     setSalvando(true);
     setErro('');
     try {
-      await adminApi.createAviso({ ...form, ativo: true });
+      if (editandoId) {
+        await adminApi.updateAviso(editandoId, {
+          evento: form.evento,
+          data_evento: form.data_evento || null,
+          previsao_horario: form.previsao_horario,
+          obs: form.obs || null,
+        });
+      } else {
+        await adminApi.createAviso({ ...form, ativo: true });
+      }
       setForm(FORM_VAZIO);
+      setEditandoId(null);
       carregar();
     } catch (err) {
       setErro(err.message);
     } finally {
       setSalvando(false);
     }
+  }
+
+  function handleEditar(a) {
+    setEditandoId(a.id);
+    setForm({
+      evento: a.evento || '',
+      data_evento: a.data_evento || '',
+      previsao_horario: a.previsao_horario || '',
+      obs: a.obs || '',
+    });
+    setErro('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleCancelarEdicao() {
+    setEditandoId(null);
+    setForm(FORM_VAZIO);
+    setErro('');
   }
 
   async function handlePublicar(id) {
@@ -45,7 +74,8 @@ export default function AdminEmBreve() {
     <div className="max-w-3xl">
       <h1 className="text-2xl font-black uppercase italic mb-8">Em Breve</h1>
 
-      <form onSubmit={handleCriar} className="bg-white p-6 rounded-2xl border border-slate-200 mb-10 space-y-4">
+      <form onSubmit={handleSalvar} className="bg-white p-6 rounded-2xl border border-slate-200 mb-10 space-y-4">
+        {editandoId && <p className="text-xs font-bold uppercase tracking-widest text-red-700">Editando aviso</p>}
         <input
           placeholder="Evento (ex: Dia 15/09 — Pedal X)"
           required
@@ -76,9 +106,16 @@ export default function AdminEmBreve() {
           className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
         />
         {erro && <p className="text-red-600 text-sm">{erro}</p>}
-        <button type="submit" disabled={salvando} className="bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60">
-          {salvando ? 'Criando...' : 'Ativar aviso'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button type="submit" disabled={salvando} className="bg-red-700 text-white px-6 py-3 rounded-xl font-black uppercase disabled:opacity-60">
+            {salvando ? 'Salvando...' : editandoId ? 'Salvar alterações' : 'Ativar aviso'}
+          </button>
+          {editandoId && (
+            <button type="button" onClick={handleCancelarEdicao} className="text-sm font-bold text-slate-500 hover:text-slate-800">
+              Cancelar
+            </button>
+          )}
+        </div>
         <p className="text-xs text-slate-400">Só pode existir um aviso ativo por vez na página de Coberturas.</p>
       </form>
 
@@ -93,8 +130,14 @@ export default function AdminEmBreve() {
                 <p className="text-xs text-slate-400">
                   Previsão {a.previsao_horario} · {a.inscricoes?.length || 0} e-mail(s) cadastrado(s)
                 </p>
+                {a.obs && <p className="text-xs text-slate-500 italic mt-1">Obs: {a.obs}</p>}
               </div>
               <div className="flex gap-3">
+                {a.ativo && (
+                  <button onClick={() => handleEditar(a)} className="text-sm font-bold text-slate-600 hover:text-slate-900">
+                    Editar
+                  </button>
+                )}
                 {a.ativo && (
                   <button onClick={() => handlePublicar(a.id)} className="text-sm font-bold text-red-700">
                     Marcar publicado
