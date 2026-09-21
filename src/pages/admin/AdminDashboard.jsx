@@ -80,6 +80,65 @@ function freqParaTexto(distribuicao) {
   return entradas.length ? entradas.map(([q, c]) => `${q}x: ${c}`).join(', ') : '—';
 }
 
+// Temperatura máxima a partir da qual o dia entra como "calor" no resumo — o
+// formulário só tem as tags chuva/sol/vento/neblina, então "calor" é derivado.
+const TEMP_CALOR = 30;
+
+function limparCelula(texto) {
+  return String(texto ?? '').replace(/\s*\n\s*/g, ' ').replace(/\|/g, '/').trim() || '—';
+}
+
+function formatarDataCurta(data) {
+  const [ano, mes, dia] = data.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+function formatarDiaSemana(data) {
+  const [ano, mes, dia] = data.split('-').map(Number);
+  return new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+}
+
+function formatarHorario(h) {
+  return h ? h.slice(0, 5) : '—';
+}
+
+function formatarClimaDoDia(ev) {
+  const tags = [...(ev.clima_condicoes || [])];
+  if (ev.clima_temperatura_max != null && ev.clima_temperatura_max >= TEMP_CALOR) tags.push('calor');
+  return tags.length ? tags.join(' + ') : '—';
+}
+
+function formatarTemperatura(ev) {
+  const min = ev.clima_temperatura_min;
+  const max = ev.clima_temperatura_max;
+  if (min == null && max == null) return '—';
+  if (min == null) return `${Math.round(max)}°C`;
+  if (max == null) return `${Math.round(min)}°C`;
+  return `${Math.round(min)}–${Math.round(max)}°C`;
+}
+
+function formatarMm(v) {
+  return v == null ? '—' : `${Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mm`;
+}
+
+function formatarVento(v) {
+  return v == null ? '—' : `${Math.round(v)} km/h`;
+}
+
+function eventoPorChuva(ev) {
+  return /chuv/i.test(ev.motivo_nao_foi || '') || (ev.clima_condicoes || []).includes('chuva');
+}
+
+function tabelaDiasSemTrabalho(dias) {
+  const linhas = ['| Data | Dia | Motivo | Chuva | Temp | Observações |', '|---|---|---|---|---|---|'];
+  for (const ev of dias) {
+    linhas.push(
+      `| ${formatarDataCurta(ev.data)} | ${formatarDiaSemana(ev.data)} | ${limparCelula(ev.motivo_nao_foi)} | ${formatarMm(ev.clima_precipitacao_mm)} | ${formatarTemperatura(ev)} | ${limparCelula(ev.observacoes)} |`,
+    );
+  }
+  return linhas;
+}
+
 function agruparEventosPorAno(porMes) {
   const porAno = new Map();
   for (const m of porMes) {
@@ -119,8 +178,11 @@ function agruparCompradoresPorAno(compradoresPorMes) {
 // Relatório completo pra colar em outra conversa — mês a mês e ano a ano,
 // eventos e compradores, previsão do mês em andamento e distribuição de
 // frequência de compra por ano (não só o ano selecionado no dashboard).
-function montarResumoCompleto({ porMes, compradoresPorMes, previsao, mesAtualStr, frequenciaPorAno }) {
+function montarResumoCompleto({ porMes, compradoresPorMes, previsao, mesAtualStr, frequenciaPorAno, eventos }) {
   const linhas = [`# Fotografe com Marco — Resumo Completo`, `_Gerado em ${new Date().toLocaleDateString('pt-BR')}_`, ''];
+  const porData = (a, b) => a.data.localeCompare(b.data);
+  const diasTrabalhados = (eventos || []).filter((e) => e.foi_fotografar).sort(porData);
+  const diasSemTrabalho = (eventos || []).filter((e) => !e.foi_fotografar).sort(porData);
 
   if (previsao) {
     linhas.push('## Previsão do mês em andamento');
@@ -157,6 +219,20 @@ function montarResumoCompleto({ porMes, compradoresPorMes, previsao, mesAtualStr
   }
   linhas.push('');
 
+  const semTrabalhoPorChuva = diasSemTrabalho.filter(eventoPorChuva);
+  const semTrabalhoOutros = diasSemTrabalho.filter((e) => !eventoPorChuva(e));
+  linhas.push('## Dias de chuva em que não fui trabalhar');
+  if (semTrabalhoPorChuva.length === 0) {
+    linhas.push('Nenhum dia registrado.', '');
+  } else {
+    linhas.push(`${semTrabalhoPorChuva.length} dia(s) registrado(s) sem trabalho por causa da chuva.`, '');
+    linhas.push(...tabelaDiasSemTrabalho(semTrabalhoPorChuva), '');
+  }
+  if (semTrabalhoOutros.length > 0) {
+    linhas.push('### Outros dias sem trabalho (não foi por chuva)');
+    linhas.push(...tabelaDiasSemTrabalho(semTrabalhoOutros), '');
+  }
+
   linhas.push('## Compradores — mês a mês');
   linhas.push('| Mês | Transações | Únicos | Valor bruto | Ticket médio | Recompra no mês | Novos | Recorrentes |');
   linhas.push('|---|---|---|---|---|---|---|---|');
@@ -181,6 +257,32 @@ function montarResumoCompleto({ porMes, compradoresPorMes, previsao, mesAtualStr
   linhas.push('## Distribuição de frequência de compra — por ano');
   for (const [ano, dist] of Object.entries(frequenciaPorAno || {}).sort()) {
     linhas.push(`- ${ano}: ${freqParaTexto(dist)}`);
+  }
+  linhas.push('');
+
+  linhas.push(`## Dia a dia — ${diasTrabalhados.length} dia(s) trabalhado(s)`);
+  linhas.push(
+    `_Clima = janela da manhã (5h–10h) no Recreio/Prainha quando preenchido automaticamente; "calor" = temperatura máxima ≥ ${TEMP_CALOR}°C. "—" = não preenchido. Receita = valor líquido atual (pode subir enquanto as vendas do evento continuam)._`,
+    '',
+  );
+  const porMesDoDia = new Map();
+  for (const ev of diasTrabalhados) {
+    const mes = ev.data.slice(0, 7);
+    if (!porMesDoDia.has(mes)) porMesDoDia.set(mes, []);
+    porMesDoDia.get(mes).push(ev);
+  }
+  for (const [mes, dias] of porMesDoDia) {
+    const [ano, mesNum] = mes.split('-').map(Number);
+    const titulo = new Date(ano, mesNum - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    linhas.push(`### ${titulo} (${dias.length} dia(s))`);
+    linhas.push('| Data | Dia | Chegada | Saída | Clima | Temp | Chuva | Vento | Rostos | Enviadas | Vendidas | Receita | Observações |');
+    linhas.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    for (const ev of dias) {
+      linhas.push(
+        `| ${formatarDataCurta(ev.data)} | ${formatarDiaSemana(ev.data)} | ${formatarHorario(ev.horario_chegada)} | ${formatarHorario(ev.horario_saida)} | ${formatarClimaDoDia(ev)} | ${formatarTemperatura(ev)} | ${formatarMm(ev.clima_precipitacao_mm)} | ${formatarVento(ev.clima_vento_kmh_max)} | ${ev.rostos_reconhecidos ?? '—'} | ${ev.fotos_enviadas ?? '—'} | ${ev.fotos_vendidas_total ?? '—'} | ${formatarReal(ev.valor_total_vendido)} | ${limparCelula(ev.observacoes)} |`,
+      );
+    }
+    linhas.push('');
   }
 
   return linhas.join('\n');
@@ -233,7 +335,10 @@ export default function AdminDashboard() {
     setCopiado(false);
     try {
       const anos = [...new Set(dados.compradoresPorMes.map((m) => m.mes.slice(0, 4)))].sort();
-      const resultados = await Promise.all(anos.map((ano) => adminApi.compradoresDoAno(ano)));
+      const [eventos, ...resultados] = await Promise.all([
+        adminApi.listEventos(),
+        ...anos.map((ano) => adminApi.compradoresDoAno(ano)),
+      ]);
       const frequenciaPorAno = Object.fromEntries(anos.map((ano, i) => [ano, resultados[i].distribuicao_frequencia]));
 
       setResumoTexto(
@@ -243,6 +348,7 @@ export default function AdminDashboard() {
           previsao,
           mesAtualStr,
           frequenciaPorAno,
+          eventos,
         }),
       );
     } finally {
@@ -483,8 +589,8 @@ export default function AdminDashboard() {
       <div className="bg-white p-6 rounded-2xl border border-slate-200">
         <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1">Resumo completo exportável</h2>
         <p className="text-xs text-slate-400 mb-4">
-          Mês a mês e ano a ano — eventos, compradores, previsão e distribuição de frequência de compra por ano. Pronto pra colar em
-          outra conversa.
+          Mês a mês, ano a ano e dia a dia (clima, horários, observações) — eventos, dias de chuva sem trabalho, compradores, previsão e
+          distribuição de frequência de compra por ano. Pronto pra colar em outra conversa.
         </p>
         <button
           type="button"
