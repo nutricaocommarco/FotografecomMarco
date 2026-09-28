@@ -209,6 +209,7 @@ export default function AdminRelatorios() {
   const [salvando, setSalvando] = useState(false);
   const [climaTocadoManualmente, setClimaTocadoManualmente] = useState(false);
   const [buscandoClima, setBuscandoClima] = useState(false);
+  const [erroClima, setErroClima] = useState('');
   const [statusBackfill, setStatusBackfill] = useState('');
   const [rodandoBackfill, setRodandoBackfill] = useState(false);
 
@@ -243,12 +244,29 @@ export default function AdminRelatorios() {
       !form.clima_precipitacao_mm &&
       !form.clima_vento_kmh_max;
     if (!climaVazio) return;
+    await buscarClimaParaData(novaData);
+  }
 
+  // Busca o clima pra uma data e preenche o formulário. Usada tanto no
+  // preenchimento automático ao digitar a data quanto no botão "Buscar
+  // automaticamente" (esse último ignora os guardas de "já tocou/já tem
+  // algo preenchido" — é um pedido explícito do usuário pra buscar de novo,
+  // por exemplo depois de rodar o "Popular clima histórico" com o
+  // formulário já aberto, quando a busca original pode ter vindo vazia por a
+  // Open-Meteo ainda não ter o dia mais recente disponível).
+  async function buscarClimaParaData(data, { sobrescrever = false } = {}) {
+    if (!data) return;
     setBuscandoClima(true);
+    setErroClima('');
     try {
-      const c = await adminApi.buscarClima(novaData);
+      const c = await adminApi.buscarClima(data);
+      const climaVeioVazio = (c.condicoes || []).length === 0 && c.temperatura_max == null && c.precipitacao_mm == null;
+      if (climaVeioVazio) {
+        setErroClima('Sem dado de clima disponível pra essa data ainda — preencha na mão ou tente de novo mais tarde.');
+        return;
+      }
       setForm((f) =>
-        climaTocadoManualmente
+        !sobrescrever && climaTocadoManualmente
           ? f
           : {
               ...f,
@@ -259,8 +277,8 @@ export default function AdminRelatorios() {
               clima_vento_kmh_max: c.vento_kmh_max ?? '',
             },
       );
-    } catch {
-      // best-effort, sem aviso de erro pro usuário — o clima segue editável na mão
+    } catch (err) {
+      setErroClima('Não consegui buscar o clima automaticamente: ' + err.message);
     } finally {
       setBuscandoClima(false);
     }
@@ -422,6 +440,17 @@ export default function AdminRelatorios() {
         <SecaoTitulo>
           Clima {buscandoClima && <span className="text-slate-400 normal-case font-normal">buscando automaticamente...</span>}
         </SecaoTitulo>
+        <div className="flex items-center gap-3 -mt-2">
+          <button
+            type="button"
+            disabled={!form.data || buscandoClima}
+            onClick={() => buscarClimaParaData(form.data, { sobrescrever: true })}
+            className="text-xs font-bold text-red-700 hover:text-red-800 disabled:opacity-40 disabled:cursor-not-allowed uppercase tracking-wide"
+          >
+            Buscar automaticamente
+          </button>
+          {erroClima && <p className="text-xs text-amber-700">{erroClima}</p>}
+        </div>
         <div className="flex flex-wrap gap-4">
           {CONDICOES_CLIMA.map((c) => (
             <label key={c} className="flex items-center gap-2 text-sm text-slate-700 capitalize">
