@@ -7,7 +7,7 @@ import {
   parseRelatorioInformacoesEvento,
 } from '../../lib/relatorioFotosParser';
 
-const CONDICOES_CLIMA = ['chuva', 'sol', 'vento', 'neblina'];
+const CONDICOES_CLIMA = ['chuva', 'sol', 'parcialmente nublado', 'nublado', 'muito nublado', 'vento', 'neblina'];
 const OPCOES_DIVULGACAO = [
   { valor: 'nenhuma', label: 'Nenhuma' },
   { valor: 'stories', label: 'Stories' },

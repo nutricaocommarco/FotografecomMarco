@@ -9,27 +9,37 @@ const HORA_INICIO_MANHA = 5;
 const HORA_FIM_MANHA = 10;
 
 // Tabela de códigos WMO (retornados pela Open-Meteo) mapeada pras nossas tags
-// de clima (chuva/sol/vento/neblina). "Vento" não tem código WMO próprio —
-// é inferido à parte, pela velocidade máxima do vento no período.
+// de clima (chuva/sol/parcialmente nublado/nublado/vento/neblina). "Muito
+// nublado" não tem código WMO equivalente (0-3 só vai até "encoberto"), então
+// fica só como opção manual. "Vento" não tem código WMO próprio — é inferido
+// à parte, pela velocidade máxima do vento no período.
 function condicoesDoWeathercode(weathercode, ventoKmhMax, precipitacaoMm) {
   const condicoes = new Set();
 
   if ([45, 48].includes(weathercode)) condicoes.add('neblina');
   if (weathercode >= 51 || precipitacaoMm > 0.5) condicoes.add('chuva');
-  if (weathercode <= 3 && !condicoes.has('chuva')) condicoes.add('sol');
+  if (!condicoes.has('chuva')) {
+    if (weathercode <= 1) condicoes.add('sol');
+    else if (weathercode === 2) condicoes.add('parcialmente nublado');
+    else if (weathercode === 3) condicoes.add('nublado');
+  }
   if (ventoKmhMax >= 30) condicoes.add('vento');
 
   return [...condicoes];
 }
 
 // Quanto maior, mais "grave"/impactante — usado pra escolher 1 weathercode
-// representativo entre as várias horas da manhã (prioriza chuva sobre sol).
+// representativo entre as várias horas da manhã (prioriza chuva sobre sol, e
+// nublado sobre sol, quando a manhã tem mais de uma condição).
 function gravidadeDoCodigo(code) {
-  if (code >= 95) return 5; // trovoada
-  if (code >= 61) return 4; // chuva
-  if (code >= 51) return 3; // garoa
-  if (code === 45 || code === 48) return 2; // neblina
-  return 1; // limpo/nublado
+  if (code >= 95) return 8; // trovoada
+  if (code >= 61) return 7; // chuva
+  if (code >= 51) return 6; // garoa
+  if (code === 45 || code === 48) return 5; // neblina
+  if (code === 3) return 4; // nublado
+  if (code === 2) return 3; // parcialmente nublado
+  if (code === 1) return 2; // poucas nuvens
+  return 1; // 0: céu limpo
 }
 
 // Agrega as horas de `hourly` que caem dentro da janela da manhã de uma data
