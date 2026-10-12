@@ -6,7 +6,7 @@ const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SE
 
 // Categorias conhecidas que ficam soltas; qualquer outro código é tratado como marca de bike
 // e agrupado no menu "Bikes".
-const CODIGOS_CATEGORIA = ['ni', 'nao-identificados', 'corrida', 'caminhada', 'corrida-caminhada', 'motos', 'carros', 'carro', 'pet', 'surf', 'todas'];
+const CODIGOS_CATEGORIA = ['ni', 'nao-identificados', 'corrida', 'caminhada', 'corrida-caminhada', 'motos', 'carros', 'carro', 'pet', 'surf', 'todas', 'majtrotezindecria'];
 
 function formatarDataBadge(dataEvento) {
   if (!dataEvento) return null;
