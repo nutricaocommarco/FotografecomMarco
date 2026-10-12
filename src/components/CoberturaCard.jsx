@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, X } from 'lucide-react';
+import { ehCategoriaFixa } from '../lib/focoRadicalLinks';
 
 const MESES_ABREV = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
-// Categorias conhecidas que ficam soltas; qualquer outro código é tratado como marca de bike
-// e agrupado no menu "Bikes".
-const CODIGOS_CATEGORIA = ['ni', 'nao-identificados', 'corrida', 'caminhada', 'corrida-caminhada', 'motos', 'carros', 'carro', 'pet', 'surf', 'todas', 'majtrotezindecria'];
+// Categorias conhecidas (ou galerias marcadas como "solta" no admin) ficam
+// soltas; qualquer outro código é tratado como marca de bike e agrupado no
+// menu "Bikes".
+const ehSolta = (g) => g.solta === true || ehCategoriaFixa(g.codigo);
 
 function formatarDataBadge(dataEvento) {
   if (!dataEvento) return null;
@@ -46,9 +48,9 @@ export default function CoberturaCard({ cobertura, prioridade = false }) {
   const badge = formatarDataBadge(data_evento);
   const [bikesAbertas, setBikesAbertas] = useState(false);
 
-  const categorias = (galerias || []).filter((g) => CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()));
+  const categorias = (galerias || []).filter(ehSolta);
   const bikes = (galerias || [])
-    .filter((g) => !CODIGOS_CATEGORIA.includes(g.codigo?.toLowerCase()))
+    .filter((g) => !ehSolta(g))
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   return (

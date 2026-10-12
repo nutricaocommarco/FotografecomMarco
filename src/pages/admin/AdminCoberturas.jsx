@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/adminApi';
-import { buildLinkPrincipal, parseGaleriasColadas, gerarLinksGalerias, calcularDataSaidaDoAr } from '../../lib/focoRadicalLinks';
+import { buildLinkPrincipal, parseGaleriasColadas, gerarLinksGalerias, calcularDataSaidaDoAr, ehCategoriaFixa } from '../../lib/focoRadicalLinks';
 
 const FORM_VAZIO = {
   nome: 'Treino Prainha',
@@ -88,9 +88,17 @@ export default function AdminCoberturas() {
 
   useEffect(carregar, []);
 
+  // Cola-se a lista de novo várias vezes no mesmo dia (a contagem de fotos
+  // muda) — mantém a marca "solta" das galerias que já estavam marcadas.
   function handleParsear() {
     const galerias = parseGaleriasColadas(textoGalerias);
-    setGaleriasParseadas(galerias);
+    setGaleriasParseadas((anteriores) =>
+      galerias.map((g) => (anteriores.find((a) => a.codigo === g.codigo)?.solta ? { ...g, solta: true } : g)),
+    );
+  }
+
+  function alternarSolta(codigo) {
+    setGaleriasParseadas((atual) => atual.map((g) => (g.codigo === codigo ? { ...g, solta: !g.solta } : g)));
   }
 
   function handleAdicionarTodasAsFotos() {
@@ -251,14 +259,31 @@ export default function AdminCoberturas() {
 
         {galeriasParseadas.length > 0 && (
           <div className="border border-slate-200 rounded-xl p-4 space-y-1 max-h-64 overflow-y-auto">
-            {galeriasVisiveis.map((g) => (
-              <div key={g.codigo} className="text-sm flex justify-between text-slate-700">
-                <span>
-                  {g.nome} {g.numFotos != null && <span className="text-slate-400">({g.numFotos} fotos)</span>}
-                </span>
-                <span className="text-slate-400 font-mono">{g.codigo}</span>
-              </div>
-            ))}
+            <p className="text-xs text-slate-400 pb-2">
+              Marque "Solta" pra galeria aparecer como botão ao lado de Corrida/Motos/Carros em vez de dentro do menu Bikes.
+            </p>
+            {galeriasVisiveis.map((g) => {
+              const fixa = ehCategoriaFixa(g.codigo);
+              return (
+                <div key={g.codigo} className="text-sm flex items-center justify-between gap-3 text-slate-700">
+                  <span className="min-w-0">
+                    {g.nome} {g.numFotos != null && <span className="text-slate-400">({g.numFotos} fotos)</span>}
+                  </span>
+                  <span className="flex items-center gap-3 shrink-0">
+                    <label className={`flex items-center gap-1.5 text-xs font-bold uppercase ${fixa ? 'text-slate-300' : 'text-slate-600'}`}>
+                      <input
+                        type="checkbox"
+                        checked={fixa || g.solta === true}
+                        disabled={fixa}
+                        onChange={() => alternarSolta(g.codigo)}
+                      />
+                      Solta
+                    </label>
+                    <span className="text-slate-400 font-mono">{g.codigo}</span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 

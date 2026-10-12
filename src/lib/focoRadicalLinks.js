@@ -1,6 +1,29 @@
 const LOJA = '1439';
 const CIDADE = 'rio-de-janeiro';
 
+// Categorias que sempre aparecem como botão solto no card de cobertura; as
+// demais galerias vão pro menu "Bikes", a não ser que tenham a marca `solta`
+// (marcada no admin — pra galerias avulsas, tipo grupos de treino).
+// 'majtrotezindecria' ficou da primeira galeria avulsa, antes da marca existir.
+export const CODIGOS_CATEGORIA = [
+  'ni',
+  'nao-identificados',
+  'corrida',
+  'caminhada',
+  'corrida-caminhada',
+  'motos',
+  'carros',
+  'carro',
+  'pet',
+  'surf',
+  'todas',
+  'majtrotezindecria',
+];
+
+export function ehCategoriaFixa(codigo) {
+  return CODIGOS_CATEGORIA.includes(codigo?.toLowerCase());
+}
+
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 function slugify(str) {
@@ -123,5 +146,6 @@ export function gerarLinksGalerias(galerias, dataEvento, local = 'treino-prainha
     codigo: g.codigo,
     numFotos: g.numFotos ?? null,
     link: buildLinkGaleria(dataEvento, local, g.codigo),
+    ...(g.solta ? { solta: true } : {}),
   }));
 }
