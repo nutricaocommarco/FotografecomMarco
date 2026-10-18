@@ -36,18 +36,32 @@ function slugify(str) {
     .replace(/^-+|-+$/g, '');
 }
 
+// A Foco Radical mudou o formato das URLs de evento: o slug perdeu o
+// "-fotografecommarco-" e o link principal passou a usar ?loja=maj em vez de
+// ?loja=1439. Só eventos novos respondem no formato novo — os antigos
+// continuam respondendo só no formato antigo (o novo dá 404 neles, e vice-versa).
+// Último evento antigo confirmado: 12/10/2026; primeiro novo: 18/10/2026
+// (sem eventos entre os dois), então a virada fica em 13/10.
+const FORMATO_NOVO_A_PARTIR_DE = '2026-10-13';
+
+function usaFormatoNovo(dataEvento) {
+  return dataEvento >= FORMATO_NOVO_A_PARTIR_DE;
+}
+
 // dataEvento: 'YYYY-MM-DD', local: ex. "treino-prainha"
 export function buildEventSlug(dataEvento, local = 'treino-prainha') {
   const [ano, mes, dia] = dataEvento.split('-');
   const aaaammdd = `${ano}${mes}${dia}`;
   const mesAbrev = MESES[parseInt(mes, 10) - 1];
   const localSlug = slugify(local);
-  return `${aaaammdd}-${localSlug}-${dia}-${mesAbrev}-${ano}-fotografecommarco-${CIDADE}-${LOJA}`;
+  const marca = usaFormatoNovo(dataEvento) ? '' : 'fotografecommarco-';
+  return `${aaaammdd}-${localSlug}-${dia}-${mesAbrev}-${ano}-${marca}${CIDADE}-${LOJA}`;
 }
 
 export function buildLinkPrincipal(dataEvento, local = 'treino-prainha') {
   const slug = buildEventSlug(dataEvento, local);
-  return `https://maj.focoradical.com.br/evento/${slug}?loja=${LOJA}`;
+  const loja = usaFormatoNovo(dataEvento) ? 'maj' : LOJA;
+  return `https://maj.focoradical.com.br/evento/${slug}?loja=${loja}`;
 }
 
 export function buildLinkGaleria(dataEvento, local = 'treino-prainha', codigoGaleria) {
