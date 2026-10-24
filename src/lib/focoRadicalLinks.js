@@ -36,17 +36,16 @@ function slugify(str) {
     .replace(/^-+|-+$/g, '');
 }
 
-// A Foco Radical mudou o formato das URLs de evento: o slug perdeu o
-// "-fotografecommarco-" e o link principal passou a usar ?loja=maj em vez de
-// ?loja=1439. Só eventos novos respondem no formato novo — os antigos
-// continuam respondendo só no formato antigo (o novo dá 404 neles, e vice-versa).
-// Último evento antigo confirmado: 12/10/2026; primeiro novo: 18/10/2026
-// (sem eventos entre os dois), então a virada fica em 13/10.
-const FORMATO_NOVO_A_PARTIR_DE = '2026-10-13';
+// O endereço do evento na Foco Radical é montado a partir do NOME que o Marco
+// digita lá: o padrão é "TREINO PRAINHA DD-MMM-AAAA @fotografecommarco", que
+// vira "-fotografecommarco-" no slug. Em 18/10/2026 o nome foi digitado sem o
+// "@fotografecommarco", então só esse evento não tem essa parte — se acontecer
+// de novo, basta incluir a data aqui (o evento dá 404 se o slug não bater).
+const EVENTOS_SEM_MARCA_NO_NOME = ['2026-10-18'];
 
-function usaFormatoNovo(dataEvento) {
-  return dataEvento >= FORMATO_NOVO_A_PARTIR_DE;
-}
+// O ?loja= do link principal tanto faz (maj e 1439 funcionam nos dois tipos de
+// evento). Eventos novos usam maj, que é o que a Foco passou a gerar.
+const LOJA_MAJ_A_PARTIR_DE = '2026-10-13';
 
 // dataEvento: 'YYYY-MM-DD', local: ex. "treino-prainha"
 export function buildEventSlug(dataEvento, local = 'treino-prainha') {
@@ -54,13 +53,13 @@ export function buildEventSlug(dataEvento, local = 'treino-prainha') {
   const aaaammdd = `${ano}${mes}${dia}`;
   const mesAbrev = MESES[parseInt(mes, 10) - 1];
   const localSlug = slugify(local);
-  const marca = usaFormatoNovo(dataEvento) ? '' : 'fotografecommarco-';
+  const marca = EVENTOS_SEM_MARCA_NO_NOME.includes(dataEvento) ? '' : 'fotografecommarco-';
   return `${aaaammdd}-${localSlug}-${dia}-${mesAbrev}-${ano}-${marca}${CIDADE}-${LOJA}`;
 }
 
 export function buildLinkPrincipal(dataEvento, local = 'treino-prainha') {
   const slug = buildEventSlug(dataEvento, local);
-  const loja = usaFormatoNovo(dataEvento) ? 'maj' : LOJA;
+  const loja = dataEvento >= LOJA_MAJ_A_PARTIR_DE ? 'maj' : LOJA;
   return `https://maj.focoradical.com.br/evento/${slug}?loja=${loja}`;
 }
 
