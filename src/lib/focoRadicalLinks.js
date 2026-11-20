@@ -139,8 +139,28 @@ function parseFormatoTrincas(linhas) {
   return galerias;
 }
 
-// Faz o parsing do bloco colado do Excel/app, tentando os dois formatos conhecidos
-// (o do PC, com rótulos "Nome:"/"Código:", e o do celular, em trincas de linhas soltas).
+// Formato da interface nova da Foco (nov/2026): nome e código na mesma linha,
+// separados por tab (ou 2+ espaços, caso o tab vire espaço ao colar), e a
+// contagem na linha seguinte:
+// Corrida<TAB>corrida
+// 957
+// (repetido várias vezes)
+function parseFormatoParesComTab(linhas) {
+  if (linhas.length === 0 || linhas.length % 2 !== 0) return [];
+
+  const galerias = [];
+  for (let i = 0; i < linhas.length; i += 2) {
+    const partes = linhas[i].split(/\t+|\s{2,}/).map((p) => p.trim()).filter(Boolean);
+    const numFotosStr = linhas[i + 1];
+    if (partes.length !== 2 || !/^\d+$/.test(numFotosStr)) return []; // não bate o padrão, desiste desse formato
+    galerias.push({ nome: partes[0], codigo: partes[1], numFotos: parseInt(numFotosStr, 10) });
+  }
+  return galerias;
+}
+
+// Faz o parsing do bloco colado do Excel/app, tentando os formatos conhecidos
+// (o do PC, com rótulos "Nome:"/"Código:", o do celular, em trincas de linhas
+// soltas, e o da interface nova, em pares "nome<TAB>código" + contagem).
 export function parseGaleriasColadas(texto) {
   if (!texto?.trim()) return [];
 
@@ -149,7 +169,10 @@ export function parseGaleriasColadas(texto) {
   const rotulado = parseFormatoRotulado(linhas);
   if (rotulado.length > 0) return rotulado;
 
-  return parseFormatoTrincas(linhas);
+  const trincas = parseFormatoTrincas(linhas);
+  if (trincas.length > 0) return trincas;
+
+  return parseFormatoParesComTab(linhas);
 }
 
 // Gera os links prontos a partir das galerias já parseadas + dados do evento.
